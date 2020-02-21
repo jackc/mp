@@ -331,21 +331,30 @@ func NilifyEmptyString() ValueConverter {
 	})
 }
 
-func RequireStringLength(min, max int) ValueConverter {
+func requireStringTest(test func(string) bool, failErr error) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		s, ok := value.(string)
 		if !ok {
 			return nil, errors.New("not a string")
-		} else if len(s) < min {
-			return nil, errors.New("is too short")
-		} else if len(s) > max {
-			return nil, errors.New("is too long")
 		}
-		return s, nil
+
+		if test(s) {
+			return s, nil
+		}
+
+		return nil, failErr
 	})
 }
 
-func requireDecimalTest(test func(n decimal.Decimal) bool, failErr error) ValueConverter {
+func RequireStringMinLength(n int) ValueConverter {
+	return requireStringTest(func(s string) bool { return len(s) >= n }, errors.New("too short"))
+}
+
+func RequireStringMaxLength(n int) ValueConverter {
+	return requireStringTest(func(s string) bool { return len(s) <= n }, errors.New("too long"))
+}
+
+func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, ok := value.(decimal.Decimal)
 		if !ok {
@@ -376,7 +385,7 @@ func RequireDecimalGreaterThanOrEqual(x decimal.Decimal) ValueConverter {
 	return requireDecimalTest(func(n decimal.Decimal) bool { return n.GreaterThanOrEqual(x) }, errors.New("too small"))
 }
 
-func requireInt64Test(test func(n int64) bool, failErr error) ValueConverter {
+func requireInt64Test(test func(int64) bool, failErr error) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, ok := value.(int64)
 		if !ok {

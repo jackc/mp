@@ -176,24 +176,45 @@ func TestNilifyEmptyString(t *testing.T) {
 	}
 }
 
-func TestRequireStringLength(t *testing.T) {
+func TestRequireStringMinLength(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
-		min      int
-		max      int
+		length   int
 		success  bool
 	}{
-		{"foo", "foo", 1, 10, true},
-		{"", nil, 1, 10, false},
-		{"foo", nil, 1, 2, false},
-		{1, nil, 1, 10, false},
-		{flex.UndefinedValue, nil, 1, 10, false},
-		{nil, nil, 1, 10, false},
+		{"foo", "foo", 1, true},
+		{"f", "f", 1, true},
+		{"", nil, 1, false},
+		{1, nil, 1, false},
+		{flex.UndefinedValue, nil, 1, false},
+		{nil, nil, 1, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireStringLength(tt.min, tt.max).ConvertValue(tt.value)
+		value, err := flex.RequireStringMinLength(tt.length).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireStringMaxLength(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		length   int
+		success  bool
+	}{
+		{"f", "f", 3, true},
+		{"foo", "foo", 3, true},
+		{"", "", 1, true},
+		{1, nil, 1, false},
+		{flex.UndefinedValue, nil, 1, false},
+		{nil, nil, 1, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireStringMaxLength(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
