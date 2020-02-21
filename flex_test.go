@@ -278,3 +278,83 @@ func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
+
+func TestRequireInt64LessThan(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    int64
+		success  bool
+	}{
+		{int64(1), int64(1), 10, true},
+		{int64(10), nil, 10, false},
+		{flex.UndefinedValue, nil, 10, false},
+		{nil, nil, 10, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireInt64LessThan(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireInt64LessThanOrEqual(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    int64
+		success  bool
+	}{
+		{int64(1), int64(1), 10, true},
+		{int64(10), int64(10), 10, true},
+		{flex.UndefinedValue, nil, 10, false},
+		{nil, nil, 10, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireInt64LessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireInt64GreaterThan(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    int64
+		success  bool
+	}{
+		{int64(11), int64(11), 10, true},
+		{int64(10), nil, 10, false},
+		{flex.UndefinedValue, nil, 10, false},
+		{nil, nil, 10, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireInt64GreaterThan(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    int64
+		success  bool
+	}{
+		{int64(11), int64(11), 10, true},
+		{int64(10), int64(10), 10, true},
+		{flex.UndefinedValue, nil, 10, false},
+		{nil, nil, 10, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireInt64GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}

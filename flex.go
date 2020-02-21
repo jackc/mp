@@ -375,3 +375,34 @@ func RequireDecimalGreaterThan(x decimal.Decimal) ValueConverter {
 func RequireDecimalGreaterThanOrEqual(x decimal.Decimal) ValueConverter {
 	return requireDecimalTest(func(n decimal.Decimal) bool { return n.GreaterThanOrEqual(x) }, errors.New("too small"))
 }
+
+func requireInt64Test(test func(n int64) bool, failErr error) ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		n, ok := value.(int64)
+		if !ok {
+			return nil, errors.New("not a int64")
+		}
+
+		if test(n) {
+			return n, nil
+		}
+
+		return nil, failErr
+	})
+}
+
+func RequireInt64LessThan(x int64) ValueConverter {
+	return requireInt64Test(func(n int64) bool { return n < x }, errors.New("too large"))
+}
+
+func RequireInt64LessThanOrEqual(x int64) ValueConverter {
+	return requireInt64Test(func(n int64) bool { return n <= x }, errors.New("too large"))
+}
+
+func RequireInt64GreaterThan(x int64) ValueConverter {
+	return requireInt64Test(func(n int64) bool { return n > x }, errors.New("too small"))
+}
+
+func RequireInt64GreaterThanOrEqual(x int64) ValueConverter {
+	return requireInt64Test(func(n int64) bool { return n >= x }, errors.New("too small"))
+}
