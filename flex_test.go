@@ -131,6 +131,26 @@ func TestConvertDecimal(t *testing.T) {
 	}
 }
 
+func TestConvertStringSlice(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{[]string{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
+		{[]interface{}{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
+		{flex.UndefinedValue, nil, false},
+		{nil, nil, false},
+		{"abc", nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.ConvertStringSlice().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestNormalizeTextField(t *testing.T) {
 	tests := []struct {
 		value    interface{}

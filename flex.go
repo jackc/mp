@@ -266,17 +266,37 @@ func ConvertDecimal() ValueConverter {
 	})
 }
 
+func convertString(value interface{}) string {
+	switch value := value.(type) {
+	case string:
+		return value
+	case []byte:
+		return string(value)
+	}
+
+	return fmt.Sprintf("%v", value)
+}
+
 func ConvertString() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		return convertString(value), nil
+	})
+}
+
+func ConvertStringSlice() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		switch value := value.(type) {
-		case string:
+		case []string:
 			return value, nil
-		case []byte:
-			return string(value), nil
+		case []interface{}:
+			ss := make([]string, len(value))
+			for i := range value {
+				ss[i] = convertString(value[i])
+			}
+			return ss, nil
 		}
 
-		s := fmt.Sprintf("%v", value)
-		return s, nil
+		return nil, errors.New("cannot convert to string slice")
 	})
 }
 
