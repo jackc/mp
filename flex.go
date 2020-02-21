@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
@@ -288,5 +290,40 @@ func IfNotNil(vc ValueConverter) ValueConverter {
 			return value, nil
 		}
 		return vc.ConvertValue(value)
+	})
+}
+
+// NormalizeTextField performed common normalization for a single line string. It performs the following operations:
+//
+// Remove any invalid UTF-8
+// Replace non-printable characters with standard space
+// Remove spaces from left and right
+func NormalizeTextField() ValueConverter {
+	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		return normalizeOneLineString(fmt.Sprintf("%s", value)), nil
+	})))
+}
+
+func normalizeOneLineString(s string) string {
+	s = strings.ToValidUTF8(s, "")
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		} else {
+			return ' '
+		}
+	}, s)
+	s = strings.TrimSpace(s)
+
+	return s
+}
+
+// NilifyEmptyString converts the empty string to nil. Any other value not modified.
+func NilifyEmptyString() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == "" {
+			return nil, nil
+		}
+		return value, nil
 	})
 }

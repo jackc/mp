@@ -130,3 +130,47 @@ func TestConvertDecimal(t *testing.T) {
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
+
+func TestNormalizeTextField(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		msg      string
+	}{
+		{value: "a", expected: "a", msg: "no changes"},
+		{value: " a", expected: "a", msg: "trim left"},
+		{value: "a ", expected: "a", msg: "trim right"},
+		{value: " a ", expected: "a", msg: "trim both sides"},
+		{value: "a\xfe\xffa", expected: "aa", msg: "invalid UTF-8"},
+		{value: "a\u200Ba", expected: "a a", msg: "replace non-normal spaces"},
+		{value: "a\ta", expected: "a a", msg: "replace control character"},
+		{value: "a\r\n", expected: "a", msg: "trim happens after replaced control character"},
+		{value: flex.UndefinedValue, expected: flex.UndefinedValue, msg: "passes undefined"},
+		{value: nil, expected: nil, msg: "passes nil"},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.NormalizeTextField().ConvertValue(tt.value)
+		assert.NoErrorf(t, err, "%d: %s", i, tt.msg)
+		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
+	}
+}
+
+func TestNilifyEmptyString(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{"foo", "foo", true},
+		{"", nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{nil, nil, true},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.NilifyEmptyString().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
