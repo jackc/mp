@@ -198,3 +198,83 @@ func TestRequireStringLength(t *testing.T) {
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
+
+func TestRequireDecimalLessThan(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    decimal.Decimal
+		success  bool
+	}{
+		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), true},
+		{decimal.NewFromInt(10), nil, decimal.NewFromInt(10), false},
+		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{nil, nil, decimal.NewFromInt(10), false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireDecimalLessThan(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireDecimalLessThanOrEqual(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    decimal.Decimal
+		success  bool
+	}{
+		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), true},
+		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
+		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{nil, nil, decimal.NewFromInt(10), false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireDecimalLessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireDecimalGreaterThan(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    decimal.Decimal
+		success  bool
+	}{
+		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), true},
+		{decimal.NewFromInt(10), nil, decimal.NewFromInt(10), false},
+		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{nil, nil, decimal.NewFromInt(10), false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireDecimalGreaterThan(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		limit    decimal.Decimal
+		success  bool
+	}{
+		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), true},
+		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
+		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{nil, nil, decimal.NewFromInt(10), false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireDecimalGreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}

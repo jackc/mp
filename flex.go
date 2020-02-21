@@ -344,3 +344,34 @@ func RequireStringLength(min, max int) ValueConverter {
 		return s, nil
 	})
 }
+
+func requireDecimalTest(test func(n decimal.Decimal) bool, failErr error) ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		n, ok := value.(decimal.Decimal)
+		if !ok {
+			return nil, errors.New("not a decimal")
+		}
+
+		if test(n) {
+			return n, nil
+		}
+
+		return nil, failErr
+	})
+}
+
+func RequireDecimalLessThan(x decimal.Decimal) ValueConverter {
+	return requireDecimalTest(func(n decimal.Decimal) bool { return n.LessThan(x) }, errors.New("too large"))
+}
+
+func RequireDecimalLessThanOrEqual(x decimal.Decimal) ValueConverter {
+	return requireDecimalTest(func(n decimal.Decimal) bool { return n.LessThanOrEqual(x) }, errors.New("too large"))
+}
+
+func RequireDecimalGreaterThan(x decimal.Decimal) ValueConverter {
+	return requireDecimalTest(func(n decimal.Decimal) bool { return n.GreaterThan(x) }, errors.New("too small"))
+}
+
+func RequireDecimalGreaterThanOrEqual(x decimal.Decimal) ValueConverter {
+	return requireDecimalTest(func(n decimal.Decimal) bool { return n.GreaterThanOrEqual(x) }, errors.New("too small"))
+}
