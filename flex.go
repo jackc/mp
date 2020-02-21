@@ -1,6 +1,7 @@
 package flex
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -88,6 +89,25 @@ func (e Errors) Error() string {
 	}
 
 	return sb.String()
+}
+
+func (e Errors) MarshalJSON() ([]byte, error) {
+	if len(e) == 0 {
+		return []byte(`{}`), nil
+	}
+
+	m := make(map[string]interface{}, len(e))
+	for attr, err := range e {
+		var val interface{}
+		if jm, ok := err.(json.Marshaler); ok {
+			val = jm
+		} else {
+			val = err.Error()
+		}
+		m[attr] = val
+	}
+
+	return json.Marshal(m)
 }
 
 type Record struct {
