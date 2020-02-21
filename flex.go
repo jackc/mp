@@ -73,19 +73,40 @@ func (vcf ValueConverterFunc) ConvertValue(v interface{}) (interface{}, error) {
 	return vcf(v)
 }
 
+type Errors map[string]error
+
+func (e Errors) Error() string {
+	sb := &strings.Builder{}
+
+	join := false
+	for attr, err := range e {
+		if join {
+			sb.WriteString(", ")
+		}
+		fmt.Fprintf(sb, "%s %v", attr, err)
+		join = true
+	}
+
+	return sb.String()
+}
+
 type Record struct {
 	t         *Type
 	original  map[string]interface{}
 	converted map[string]interface{}
-	errors    map[string]error
+	errors    Errors
 }
 
 func (r *Record) Get(s string) interface{} {
 	return r.converted[s]
 }
 
-func (r *Record) Valid() bool {
-	return len(r.errors) == 0
+func (r *Record) Errors() error {
+	if len(r.errors) == 0 {
+		return nil
+	}
+
+	return r.errors
 }
 
 func (r *Record) Pick(keys ...string) map[string]interface{} {

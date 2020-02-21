@@ -14,7 +14,7 @@ func TestType(t *testing.T) {
 	ft.Field("name")
 
 	record := ft.Build(map[string]interface{}{"name": "Adam"})
-	require.True(t, record.Valid())
+	require.NoError(t, record.Errors())
 
 	assert.Equal(t, "Adam", record.Get("name"))
 }
@@ -24,7 +24,7 @@ func TestTypeBuildError(t *testing.T) {
 	ft.Field("age", flex.ConvertInt64())
 
 	record := ft.Build(map[string]interface{}{"age": "abc"})
-	require.False(t, record.Valid())
+	require.Error(t, record.Errors())
 }
 
 func TestRecordAttrs(t *testing.T) {
