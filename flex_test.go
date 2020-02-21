@@ -13,17 +13,17 @@ func TestType(t *testing.T) {
 	ft := flex.Type{}
 	ft.Field("name")
 
-	record := ft.Build(map[string]interface{}{"name": "Adam"})
+	record := ft.New(map[string]interface{}{"name": "Adam"})
 	require.NoError(t, record.Errors())
 
 	assert.Equal(t, "Adam", record.Get("name"))
 }
 
-func TestTypeBuildError(t *testing.T) {
+func TestTypeNewError(t *testing.T) {
 	ft := flex.Type{}
 	ft.Field("age", flex.ConvertInt64())
 
-	record := ft.Build(map[string]interface{}{"age": "abc"})
+	record := ft.New(map[string]interface{}{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
@@ -34,7 +34,7 @@ func TestRecordAttrs(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.Build(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
+	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
 	assert.Equal(t, map[string]interface{}{"a": "1", "b": "2", "c": "3"}, record.Attrs())
 }
 
@@ -45,7 +45,7 @@ func TestRecordPick(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.Build(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
+	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
 
 	attrs := record.Pick("a", "b")
 	assert.Equal(t, map[string]interface{}{"a": "1", "b": "2"}, attrs)

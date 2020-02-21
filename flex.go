@@ -35,7 +35,7 @@ func (t *Type) Field(name string, converters ...ValueConverter) {
 	t.fields[name] = &field{name: name, converters: converters}
 }
 
-func (t *Type) Build(attrs map[string]interface{}) *Record {
+func (t *Type) New(attrs map[string]interface{}) *Record {
 	r := &Record{
 		original:  attrs,
 		converted: make(map[string]interface{}, len(attrs)),
