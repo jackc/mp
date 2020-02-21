@@ -275,21 +275,37 @@ func Require() ValueConverter {
 	})
 }
 
-func IfDefined(vc ValueConverter) ValueConverter {
+func convertSlice(value interface{}, converters []ValueConverter) (interface{}, error) {
+	v := value
+	var err error
+
+	for _, vc := range converters {
+		v, err = vc.ConvertValue(v)
+		if err != nil {
+			break
+		}
+	}
+
+	return v, err
+}
+
+func IfDefined(converters ...ValueConverter) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		if value == UndefinedValue {
 			return value, nil
 		}
-		return vc.ConvertValue(value)
+
+		return convertSlice(value, converters)
 	})
 }
 
-func IfNotNil(vc ValueConverter) ValueConverter {
+func IfNotNil(converters ...ValueConverter) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		if value == nil {
 			return value, nil
 		}
-		return vc.ConvertValue(value)
+
+		return convertSlice(value, converters)
 	})
 }
 
