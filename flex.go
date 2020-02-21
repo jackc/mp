@@ -148,18 +148,18 @@ func convertInt64(value interface{}) (int64, error) {
 }
 
 func ConvertInt64() ValueConverter {
-	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, err := convertInt64(value)
 		if err != nil {
 			return nil, err
 		}
 
 		return n, nil
-	})))
+	})
 }
 
 func ConvertInt32() ValueConverter {
-	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, err := convertInt64(value)
 		if err != nil {
 			return nil, err
@@ -173,11 +173,11 @@ func ConvertInt32() ValueConverter {
 		}
 
 		return int32(n), nil
-	})))
+	})
 }
 
 func ConvertUUID() ValueConverter {
-	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		var uuidValue uuid.UUID
 		var err error
 
@@ -189,7 +189,7 @@ func ConvertUUID() ValueConverter {
 		s := fmt.Sprintf("%v", value)
 		uuidValue, err = uuid.FromString(s)
 		return uuidValue, err
-	})))
+	})
 }
 
 func convertDecimal(value interface{}) (decimal.Decimal, error) {
@@ -215,14 +215,14 @@ func convertDecimal(value interface{}) (decimal.Decimal, error) {
 }
 
 func ConvertDecimal() ValueConverter {
-	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, err := convertDecimal(value)
 		if err != nil {
 			return nil, err
 		}
 
 		return n, nil
-	})))
+	})
 }
 
 func ConvertString() ValueConverter {
@@ -299,9 +299,12 @@ func IfNotNil(vc ValueConverter) ValueConverter {
 // Replace non-printable characters with standard space
 // Remove spaces from left and right
 func NormalizeTextField() ValueConverter {
-	return IfDefined(IfNotNil(ValueConverterFunc(func(value interface{}) (interface{}, error) {
-		return normalizeOneLineString(fmt.Sprintf("%s", value)), nil
-	})))
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if s, ok := value.(string); ok {
+			return normalizeOneLineString(s), nil
+		}
+		return nil, errors.New("not a string")
+	})
 }
 
 func normalizeOneLineString(s string) string {

@@ -99,8 +99,8 @@ func TestConvertInt64(t *testing.T) {
 		{"1", int64(1), true},
 		{"10.5", nil, false},
 		{"abc", nil, false},
-		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{nil, nil, false},
+		{flex.UndefinedValue, nil, false},
 	}
 
 	for i, tt := range tests {
@@ -119,8 +119,8 @@ func TestConvertDecimal(t *testing.T) {
 		{decimal.NewFromInt(1), decimal.NewFromInt(1), true},
 		{1, decimal.NewFromInt(1), true},
 		{"10.5", decimal.NewFromFloat(10.5), true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
-		{nil, nil, true},
+		{flex.UndefinedValue, nil, false},
+		{nil, nil, false},
 		{"abc", nil, false},
 	}
 
@@ -135,23 +135,24 @@ func TestNormalizeTextField(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
+		success  bool
 		msg      string
 	}{
-		{value: "a", expected: "a", msg: "no changes"},
-		{value: " a", expected: "a", msg: "trim left"},
-		{value: "a ", expected: "a", msg: "trim right"},
-		{value: " a ", expected: "a", msg: "trim both sides"},
-		{value: "a\xfe\xffa", expected: "aa", msg: "invalid UTF-8"},
-		{value: "a\u200Ba", expected: "a a", msg: "replace non-normal spaces"},
-		{value: "a\ta", expected: "a a", msg: "replace control character"},
-		{value: "a\r\n", expected: "a", msg: "trim happens after replaced control character"},
-		{value: flex.UndefinedValue, expected: flex.UndefinedValue, msg: "passes undefined"},
-		{value: nil, expected: nil, msg: "passes nil"},
+		{value: "a", expected: "a", success: true, msg: "no changes"},
+		{value: " a", expected: "a", success: true, msg: "trim left"},
+		{value: "a ", expected: "a", success: true, msg: "trim right"},
+		{value: " a ", expected: "a", success: true, msg: "trim both sides"},
+		{value: "a\xfe\xffa", expected: "aa", success: true, msg: "invalid UTF-8"},
+		{value: "a\u200Ba", expected: "a a", success: true, msg: "replace non-normal spaces"},
+		{value: "a\ta", expected: "a a", success: true, msg: "replace control character"},
+		{value: "a\r\n", expected: "a", success: true, msg: "trim happens after replaced control character"},
+		{value: flex.UndefinedValue, expected: nil, success: false, msg: "undefined"},
+		{value: nil, expected: nil, success: false, msg: "nil"},
 	}
 
 	for i, tt := range tests {
 		value, err := flex.NormalizeTextField().ConvertValue(tt.value)
-		assert.NoErrorf(t, err, "%d: %s", i, tt.msg)
+		assert.Equalf(t, tt.success, err == nil, "%d: %s", i, tt.msg)
 		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
 	}
 }
