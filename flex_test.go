@@ -175,3 +175,26 @@ func TestNilifyEmptyString(t *testing.T) {
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
+
+func TestRequireStringLength(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		min      int
+		max      int
+		success  bool
+	}{
+		{"foo", "foo", 1, 10, true},
+		{"", nil, 1, 10, false},
+		{"foo", nil, 1, 2, false},
+		{1, nil, 1, 10, false},
+		{flex.UndefinedValue, nil, 1, 10, false},
+		{nil, nil, 1, 10, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireStringLength(tt.min, tt.max).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}

@@ -330,3 +330,17 @@ func NilifyEmptyString() ValueConverter {
 		return value, nil
 	})
 }
+
+func RequireStringLength(min, max int) ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		s, ok := value.(string)
+		if !ok {
+			return nil, errors.New("not a string")
+		} else if len(s) < min {
+			return nil, errors.New("is too short")
+		} else if len(s) > max {
+			return nil, errors.New("is too long")
+		}
+		return s, nil
+	})
+}
