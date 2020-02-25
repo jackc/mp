@@ -27,6 +27,14 @@ func TestTypeNewError(t *testing.T) {
 	require.Error(t, record.Errors())
 }
 
+func TestTypeNewRequiredError(t *testing.T) {
+	ft := flex.Type{}
+	ft.Field("name", flex.Require())
+
+	record := ft.New(map[string]interface{}{"misspelled": "adam"})
+	require.Error(t, record.Errors())
+}
+
 func TestRecordAttrs(t *testing.T) {
 	ft := flex.Type{}
 	ft.Field("a")

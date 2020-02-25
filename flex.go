@@ -44,20 +44,25 @@ func (t *Type) New(attrs map[string]interface{}) *Record {
 	}
 
 	for _, f := range t.fields {
-		if v, ok := attrs[f.name]; ok {
-			var err error
-			for _, converter := range f.converters {
-				v, err = converter.ConvertValue(v)
-				if err != nil {
-					break
-				}
-			}
+		v, present := attrs[f.name]
+		if !present {
+			v = UndefinedValue
+		}
 
-			if err == nil {
-				r.converted[f.name] = v
-			} else {
-				r.errors[f.name] = err
+		var err error
+		for _, converter := range f.converters {
+			v, err = converter.ConvertValue(v)
+			if err != nil {
+				break
 			}
+		}
+
+		if err == nil {
+			if v != UndefinedValue {
+				r.converted[f.name] = v
+			}
+		} else {
+			r.errors[f.name] = err
 		}
 	}
 
