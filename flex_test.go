@@ -407,3 +407,25 @@ func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
+
+func BenchmarkNewTypeAndRecord(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ft := flex.Type{}
+		ft.Field("name", flex.ConvertString())
+		ft.Field("age", flex.ConvertInt32())
+
+		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
+		require.NoError(b, record.Errors())
+	}
+}
+
+func BenchmarkRecord(b *testing.B) {
+	ft := flex.Type{}
+	ft.Field("name", flex.ConvertString())
+	ft.Field("age", flex.ConvertInt32())
+
+	for i := 0; i < b.N; i++ {
+		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
+		require.NoError(b, record.Errors())
+	}
+}
