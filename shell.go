@@ -50,9 +50,9 @@ type Command struct {
 }
 
 func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error) {
-	parsedParams := cmd.ParamsType.New(params)
-	if parsedParams.Errors() != nil {
-		return nil, fmt.Errorf("failed to parse params: %w", parsedParams.Errors())
+	parsedParams, err := cmd.parseParams(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse params: %w", err)
 	}
 
 	if cmd.ExecFunc != nil {
@@ -85,9 +85,9 @@ func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (ma
 }
 
 func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{}) ([]byte, error) {
-	parsedParams := cmd.ParamsType.New(params)
-	if parsedParams.Errors() != nil {
-		return nil, fmt.Errorf("failed to parse params: %w", parsedParams.Errors())
+	parsedParams, err := cmd.parseParams(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse params: %w", err)
 	}
 
 	if cmd.ExecJSONFunc != nil {
@@ -116,4 +116,17 @@ func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{})
 	}
 
 	return nil, fmt.Errorf("missing function: %s", cmd.Name)
+}
+
+func (cmd *Command) parseParams(params map[string]interface{}) (*Record, error) {
+	if cmd.ParamsType == nil {
+		return nil, nil
+	}
+
+	parsedParams := cmd.ParamsType.New(params)
+	if parsedParams.Errors() != nil {
+		return nil, fmt.Errorf("failed to parse params: %w", parsedParams.Errors())
+	}
+
+	return parsedParams, nil
 }

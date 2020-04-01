@@ -88,6 +88,19 @@ func TestCommandExecParsesJSONIfOnlyExecJSONFuncAvailableEmptyResponse(t *testin
 	assert.Nil(t, response)
 }
 
+func TestCommandExecWithNilParamsType(t *testing.T) {
+	cmd := flex.Command{
+		Name: "nop",
+		ExecFunc: func(ctx context.Context, params *flex.Record) (map[string]interface{}, error) {
+			return nil, nil
+		},
+	}
+
+	response, err := cmd.Exec(context.Background(), map[string]interface{}{"a": 1, "b": 2})
+	require.NoError(t, err)
+	assert.Nil(t, response)
+}
+
 func TestCommandExecJSON(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
