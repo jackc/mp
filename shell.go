@@ -52,13 +52,13 @@ type Command struct {
 func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error) {
 	parsedParams := cmd.ParamsType.New(params)
 	if parsedParams.Errors() != nil {
-		return nil, fmt.Errorf("%s: failed to parse params: %w", cmd.Name, parsedParams.Errors())
+		return nil, fmt.Errorf("failed to parse params: %w", parsedParams.Errors())
 	}
 
 	if cmd.ExecFunc != nil {
 		response, err := cmd.ExecFunc(ctx, parsedParams)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ExecFunc: %w", cmd.Name, err)
+			return nil, err
 		}
 		return response, nil
 	}
@@ -66,7 +66,7 @@ func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (ma
 	if cmd.ExecJSONFunc != nil {
 		buf, err := cmd.ExecJSONFunc(ctx, parsedParams)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ExecJSONFunc: %w", cmd.Name, err)
+			return nil, err
 		}
 
 		if buf == nil {
@@ -76,24 +76,24 @@ func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (ma
 		var response map[string]interface{}
 		err = json.Unmarshal(buf, &response)
 		if err != nil {
-			return nil, fmt.Errorf("%s: json.Unmarshal: %w", cmd.Name, err)
+			return nil, err
 		}
 		return response, nil
 	}
 
-	return nil, fmt.Errorf("%s: missing function", cmd.Name)
+	return nil, fmt.Errorf("missing function: %s", cmd.Name)
 }
 
 func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{}) ([]byte, error) {
 	parsedParams := cmd.ParamsType.New(params)
 	if parsedParams.Errors() != nil {
-		return nil, fmt.Errorf("%s: failed to parse params: %w", cmd.Name, parsedParams.Errors())
+		return nil, fmt.Errorf("failed to parse params: %w", parsedParams.Errors())
 	}
 
 	if cmd.ExecJSONFunc != nil {
 		buf, err := cmd.ExecJSONFunc(ctx, parsedParams)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ExecJSONFunc: %w", cmd.Name, err)
+			return nil, err
 		}
 		return buf, nil
 	}
@@ -101,7 +101,7 @@ func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{})
 	if cmd.ExecFunc != nil {
 		response, err := cmd.ExecFunc(ctx, parsedParams)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ExecFunc: %w", cmd.Name, err)
+			return nil, err
 		}
 
 		if response == nil {
@@ -110,10 +110,10 @@ func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{})
 
 		buf, err := json.Marshal(response)
 		if err != nil {
-			return nil, fmt.Errorf("%s: json.Marshal: %w", cmd.Name, err)
+			return nil, err
 		}
 		return buf, nil
 	}
 
-	return nil, fmt.Errorf("%s: missing function", cmd.Name)
+	return nil, fmt.Errorf("missing function: %s", cmd.Name)
 }
