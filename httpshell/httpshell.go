@@ -104,3 +104,11 @@ func (h *JSONHandler) buildParams(r *http.Request) (map[string]interface{}, erro
 
 	return nil, nil
 }
+
+func (h *JSONHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
+	if h.ErrorHandler == nil {
+		panic(fmt.Errorf("missing error handler: %w", err))
+	}
+
+	h.ErrorHandler(w, r, err)
+}
