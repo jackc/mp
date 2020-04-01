@@ -74,6 +74,20 @@ func TestCommandExecParsesJSONIfOnlyExecJSONFuncAvailable(t *testing.T) {
 	assert.EqualValues(t, 3, response["sum"])
 }
 
+func TestCommandExecParsesJSONIfOnlyExecJSONFuncAvailableEmptyResponse(t *testing.T) {
+	cmd := flex.Command{
+		Name:       "add",
+		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {}),
+		ExecJSONFunc: func(ctx context.Context, params *flex.Record) ([]byte, error) {
+			return nil, nil
+		},
+	}
+
+	response, err := cmd.Exec(context.Background(), map[string]interface{}{})
+	require.NoError(t, err)
+	assert.Nil(t, response)
+}
+
 func TestCommandExecJSON(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
@@ -114,4 +128,18 @@ func TestCommandExecJSONMarshalsExecIfExecJSONUnavailable(t *testing.T) {
 	response, err := cmd.ExecJSON(context.Background(), map[string]interface{}{"a": 1, "b": 2})
 	require.NoError(t, err)
 	assert.Equal(t, []byte(`{"sum":3}`), response)
+}
+
+func TestCommandExecJSONMarshalsExecIfExecJSONUnavailableNilResponse(t *testing.T) {
+	cmd := flex.Command{
+		Name:       "add",
+		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {}),
+		ExecFunc: func(ctx context.Context, params *flex.Record) (map[string]interface{}, error) {
+			return nil, nil
+		},
+	}
+
+	response, err := cmd.ExecJSON(context.Background(), map[string]interface{}{})
+	require.NoError(t, err)
+	assert.Nil(t, response)
 }

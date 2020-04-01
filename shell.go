@@ -68,6 +68,11 @@ func (cmd *Command) Exec(ctx context.Context, params map[string]interface{}) (ma
 		if err != nil {
 			return nil, fmt.Errorf("%s: ExecJSONFunc: %w", cmd.Name, err)
 		}
+
+		if buf == nil {
+			return nil, nil
+		}
+
 		var response map[string]interface{}
 		err = json.Unmarshal(buf, &response)
 		if err != nil {
@@ -98,6 +103,11 @@ func (cmd *Command) ExecJSON(ctx context.Context, params map[string]interface{})
 		if err != nil {
 			return nil, fmt.Errorf("%s: ExecFunc: %w", cmd.Name, err)
 		}
+
+		if response == nil {
+			return nil, nil
+		}
+
 		buf, err := json.Marshal(response)
 		if err != nil {
 			return nil, fmt.Errorf("%s: json.Marshal: %w", cmd.Name, err)
