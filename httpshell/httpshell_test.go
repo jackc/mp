@@ -24,10 +24,10 @@ func TestJSONHandlerEmptyResponse(t *testing.T) {
 	})
 
 	jsonHandler := &httpshell.JSONHandler{
-		Shell:       shell,
-		CommandName: "nop",
-		BuildParams: func(*http.Request) (map[string]interface{}, error) { return nil, nil },
-		HandleError: func(w http.ResponseWriter, r *http.Request, err error) { return },
+		Shell:         shell,
+		CommandName:   "nop",
+		ParamsBuilder: func(*http.Request) (map[string]interface{}, error) { return nil, nil },
+		HandleError:   func(w http.ResponseWriter, r *http.Request, err error) { return },
 	}
 
 	req := httptest.NewRequest("GET", "http://example.com/", nil)

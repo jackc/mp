@@ -65,10 +65,10 @@ func (e *WriteError) CommandName() string {
 }
 
 type JSONHandler struct {
-	Shell       *flex.Shell
-	CommandName string
-	BuildParams ParamsBuilder
-	HandleError ErrorHandler
+	Shell         *flex.Shell
+	CommandName   string
+	ParamsBuilder ParamsBuilder
+	HandleError   ErrorHandler
 }
 
 func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -98,8 +98,8 @@ func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *JSONHandler) buildParams(r *http.Request) (map[string]interface{}, error) {
-	if h.BuildParams != nil {
-		return h.BuildParams(r)
+	if h.ParamsBuilder != nil {
+		return h.ParamsBuilder(r)
 	}
 
 	return nil, nil
