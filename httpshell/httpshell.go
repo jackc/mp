@@ -72,14 +72,10 @@ type JSONHandler struct {
 }
 
 func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var params map[string]interface{}
-	if h.BuildParams != nil {
-		var err error
-		params, err = h.BuildParams(r)
-		if err != nil {
-			h.HandleError(w, r, &BuildParamsError{commandName: h.CommandName, err: err})
-			return
-		}
+	params, err := h.buildParams(r)
+	if err != nil {
+		h.HandleError(w, r, &BuildParamsError{commandName: h.CommandName, err: err})
+		return
 	}
 
 	jsonBytes, err := h.Shell.ExecJSON(r.Context(), h.CommandName, params)
@@ -99,4 +95,12 @@ func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.HandleError(w, r, &WriteError{commandName: h.CommandName, err: err})
 		return
 	}
+}
+
+func (h *JSONHandler) buildParams(r *http.Request) (map[string]interface{}, error) {
+	if h.BuildParams != nil {
+		return h.BuildParams(r)
+	}
+
+	return nil, nil
 }
