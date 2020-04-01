@@ -84,6 +84,11 @@ func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(jsonBytes) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	w.Header().Add("Content-Type", "application/json")
 	_, err = w.Write(jsonBytes)
 	if err != nil {
