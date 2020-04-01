@@ -28,6 +28,16 @@ type Type struct {
 	fields map[string]*field
 }
 
+type TypeBuilder interface {
+	Field(name string, converters ...ValueConverter)
+}
+
+func NewType(f func(tb TypeBuilder)) *Type {
+	t := &Type{}
+	f(t)
+	return t
+}
+
 func (t *Type) Field(name string, converters ...ValueConverter) {
 	if t.fields == nil {
 		t.fields = make(map[string]*field)
