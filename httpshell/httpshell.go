@@ -68,19 +68,19 @@ type JSONHandler struct {
 	Shell         *flex.Shell
 	CommandName   string
 	ParamsBuilder ParamsBuilder
-	HandleError   ErrorHandler
+	ErrorHandler  ErrorHandler
 }
 
 func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params, err := h.buildParams(r)
 	if err != nil {
-		h.HandleError(w, r, &BuildParamsError{commandName: h.CommandName, err: err})
+		h.ErrorHandler(w, r, &BuildParamsError{commandName: h.CommandName, err: err})
 		return
 	}
 
 	jsonBytes, err := h.Shell.ExecJSON(r.Context(), h.CommandName, params)
 	if err != nil {
-		h.HandleError(w, r, &ExecError{commandName: h.CommandName, err: err})
+		h.ErrorHandler(w, r, &ExecError{commandName: h.CommandName, err: err})
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h *JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		h.HandleError(w, r, &WriteError{commandName: h.CommandName, err: err})
+		h.ErrorHandler(w, r, &WriteError{commandName: h.CommandName, err: err})
 		return
 	}
 }
