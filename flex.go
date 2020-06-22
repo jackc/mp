@@ -232,6 +232,23 @@ func ConvertInt32() ValueConverter {
 	})
 }
 
+func ConvertBool() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		switch value := value.(type) {
+		case bool:
+			return value, nil
+		case string:
+			b, err := strconv.ParseBool(value)
+			if err != nil {
+				return nil, err
+			}
+			return b, nil
+		default:
+			return nil, errors.New("not a valid boolean")
+		}
+	})
+}
+
 func ConvertUUID() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		var uuidValue uuid.UUID

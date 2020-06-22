@@ -118,6 +118,30 @@ func TestConvertInt64(t *testing.T) {
 	}
 }
 
+func TestConvertBool(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{true, true, true},
+		{false, false, true},
+		{"true", true, true},
+		{"t", true, true},
+		{"false", false, true},
+		{"f", false, true},
+		{"abc", nil, false},
+		{nil, nil, false},
+		{flex.UndefinedValue, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.ConvertBool().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestConvertDecimal(t *testing.T) {
 	tests := []struct {
 		value    interface{}
