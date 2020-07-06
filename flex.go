@@ -463,6 +463,20 @@ func RequireStringMaxLength(n int) ValueConverter {
 	return requireStringTest(func(s string) bool { return len(s) <= n }, errors.New("too long"))
 }
 
+func RequireStringInclusion(options []string) ValueConverter {
+	return requireStringTest(
+		func(s string) bool {
+			for _, o := range options {
+				if s == o {
+					return true
+				}
+			}
+			return false
+		},
+		errors.New("not allowed value"),
+	)
+}
+
 func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		n, ok := value.(decimal.Decimal)

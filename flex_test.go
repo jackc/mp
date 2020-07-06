@@ -272,6 +272,28 @@ func TestRequireStringMaxLength(t *testing.T) {
 	}
 }
 
+func TestRequireStringInclusion(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{"foo", "foo", true},
+		{"bar", nil, false},
+		{"baz", "baz", true},
+		{"", nil, false},
+		{1, nil, false},
+		{flex.UndefinedValue, nil, false},
+		{nil, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RequireStringInclusion([]string{"foo", "baz", "abc"}).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestRequireDecimalLessThan(t *testing.T) {
 	tests := []struct {
 		value    interface{}
