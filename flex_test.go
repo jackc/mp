@@ -163,6 +163,28 @@ func TestConvertDecimal(t *testing.T) {
 	}
 }
 
+func TestConvertInt32Slice(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{[]int32{1, 2, 3}, []int32{1, 2, 3}, true},
+		{[]interface{}{"1", "2", "3"}, []int32{1, 2, 3}, true},
+		{[]interface{}{"1", 2, "3"}, []int32{1, 2, 3}, true},
+		{flex.UndefinedValue, nil, false},
+		{nil, nil, false},
+		{"abc", nil, false},
+		{42, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.ConvertInt32Slice().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestConvertStringSlice(t *testing.T) {
 	tests := []struct {
 		value    interface{}

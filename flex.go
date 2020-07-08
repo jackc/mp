@@ -214,21 +214,30 @@ func ConvertInt64() ValueConverter {
 	})
 }
 
+func convertInt32(value interface{}) (int32, error) {
+	n, err := convertInt64(value)
+	if err != nil {
+		return 0, err
+	}
+
+	if n < math.MinInt32 {
+		return 0, errors.New("less than minimum allowed number")
+	}
+	if n > math.MaxInt32 {
+		return 0, errors.New("greater than maximum allowed number")
+	}
+
+	return int32(n), nil
+}
+
 func ConvertInt32() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
-		n, err := convertInt64(value)
+		n, err := convertInt32(value)
 		if err != nil {
 			return nil, err
 		}
 
-		if n < math.MinInt32 {
-			return nil, errors.New("less than minimum allowed number")
-		}
-		if n > math.MaxInt32 {
-			return nil, errors.New("greater than maximum allowed number")
-		}
-
-		return int32(n), nil
+		return n, nil
 	})
 }
 
@@ -329,6 +338,28 @@ func ConvertStringSlice() ValueConverter {
 		}
 
 		return nil, errors.New("cannot convert to string slice")
+	})
+}
+
+func ConvertInt32Slice() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		var err error
+
+		switch value := value.(type) {
+		case []int32:
+			return value, nil
+		case []interface{}:
+			ns := make([]int32, len(value))
+			for i := range value {
+				ns[i], err = convertInt32(value[i])
+				if err != nil {
+					return nil, err
+				}
+			}
+			return ns, nil
+		}
+
+		return nil, errors.New("cannot convert to int32 slice")
 	})
 }
 
