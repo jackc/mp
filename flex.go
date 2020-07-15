@@ -195,6 +195,7 @@ func convertInt64(value interface{}) (int64, error) {
 	}
 
 	s := fmt.Sprintf("%v", value)
+	s = strings.TrimSpace(s)
 
 	num, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
@@ -247,6 +248,7 @@ func ConvertBool() ValueConverter {
 		case bool:
 			return value, nil
 		case string:
+			value = strings.TrimSpace(value)
 			b, err := strconv.ParseBool(value)
 			if err != nil {
 				return nil, err
@@ -289,9 +291,11 @@ func convertDecimal(value interface{}) (decimal.Decimal, error) {
 	case float64:
 		return decimal.NewFromFloat(value), nil
 	case string:
+		value = strings.TrimSpace(value)
 		return decimal.NewFromString(value)
 	default:
 		s := fmt.Sprintf("%v", value)
+		s = strings.TrimSpace(s)
 		return decimal.NewFromString(s)
 	}
 }

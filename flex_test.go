@@ -105,6 +105,7 @@ func TestConvertInt64(t *testing.T) {
 	}{
 		{1, int64(1), true},
 		{"1", int64(1), true},
+		{" 2 ", int64(2), true},
 		{"10.5", nil, false},
 		{"abc", nil, false},
 		{nil, nil, false},
@@ -130,6 +131,7 @@ func TestConvertBool(t *testing.T) {
 		{"t", true, true},
 		{"false", false, true},
 		{"f", false, true},
+		{" true ", true, true},
 		{"abc", nil, false},
 		{nil, nil, false},
 		{flex.UndefinedValue, nil, false},
@@ -151,6 +153,7 @@ func TestConvertDecimal(t *testing.T) {
 		{decimal.NewFromInt(1), decimal.NewFromInt(1), true},
 		{1, decimal.NewFromInt(1), true},
 		{"10.5", decimal.NewFromFloat(10.5), true},
+		{" 7.7 ", decimal.NewFromFloat(7.7), true},
 		{flex.UndefinedValue, nil, false},
 		{nil, nil, false},
 		{"abc", nil, false},
