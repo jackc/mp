@@ -119,6 +119,50 @@ func TestConvertInt64(t *testing.T) {
 	}
 }
 
+func TestConvertFloat64(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{1, float64(1), true},
+		{"1", float64(1), true},
+		{" 2 ", float64(2), true},
+		{"10.5", float64(10.5), true},
+		{"abc", nil, false},
+		{nil, nil, false},
+		{flex.UndefinedValue, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.ConvertFloat64().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestConvertFloat32(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{1, float32(1), true},
+		{"1", float32(1), true},
+		{" 2 ", float32(2), true},
+		{"10.5", float32(10.5), true},
+		{"abc", nil, false},
+		{nil, nil, false},
+		{flex.UndefinedValue, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.ConvertFloat32().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestConvertBool(t *testing.T) {
 	tests := []struct {
 		value    interface{}

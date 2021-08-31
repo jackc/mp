@@ -242,6 +242,82 @@ func ConvertInt32() ValueConverter {
 	})
 }
 
+func convertFloat64(value interface{}) (float64, error) {
+	switch value := value.(type) {
+	case int8:
+		return float64(value), nil
+	case uint8:
+		return float64(value), nil
+	case int16:
+		return float64(value), nil
+	case uint16:
+		return float64(value), nil
+	case int32:
+		return float64(value), nil
+	case uint32:
+		return float64(value), nil
+	case int64:
+		return float64(value), nil
+	case uint64:
+		return float64(value), nil
+	case int:
+		return float64(value), nil
+	case uint:
+		return float64(value), nil
+	case float32:
+		return float64(value), nil
+	case float64:
+		return value, nil
+	}
+
+	s := fmt.Sprintf("%v", value)
+	s = strings.TrimSpace(s)
+
+	num, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, errors.New("not a valid number")
+	}
+	return num, nil
+}
+
+func ConvertFloat64() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		n, err := convertFloat64(value)
+		if err != nil {
+			return nil, err
+		}
+
+		return n, nil
+	})
+}
+
+func convertFloat32(value interface{}) (float32, error) {
+	n, err := convertFloat64(value)
+	if err != nil {
+		return 0, err
+	}
+
+	if n < -math.MaxFloat32 {
+		return 0, errors.New("less than minimum allowed number")
+	}
+	if n > math.MaxFloat32 {
+		return 0, errors.New("greater than maximum allowed number")
+	}
+
+	return float32(n), nil
+}
+
+func ConvertFloat32() ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		n, err := convertFloat32(value)
+		if err != nil {
+			return nil, err
+		}
+
+		return n, nil
+	})
+}
+
 func ConvertBool() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		switch value := value.(type) {
