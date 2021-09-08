@@ -15,8 +15,8 @@ func TestShell(t *testing.T) {
 	shell.Register(&flex.Command{
 		Name: "add",
 		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {
-			tb.Field("a", flex.Require(), flex.ConvertInt32())
-			tb.Field("b", flex.Require(), flex.ConvertInt32())
+			tb.Field("a", flex.Require(), flex.Int32())
+			tb.Field("b", flex.Require(), flex.Int32())
 		}),
 		ExecFunc: func(ctx context.Context, params *flex.Record) (map[string]interface{}, error) {
 			a := params.Get("a").(int32)
@@ -36,8 +36,8 @@ func TestCommandExec(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
 		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {
-			tb.Field("a", flex.Require(), flex.ConvertInt32())
-			tb.Field("b", flex.Require(), flex.ConvertInt32())
+			tb.Field("a", flex.Require(), flex.Int32())
+			tb.Field("b", flex.Require(), flex.Int32())
 		}),
 		ExecFunc: func(ctx context.Context, params *flex.Record) (map[string]interface{}, error) {
 			a := params.Get("a").(int32)
@@ -57,8 +57,8 @@ func TestCommandExecParsesJSONIfOnlyExecJSONFuncAvailable(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
 		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {
-			tb.Field("a", flex.Require(), flex.ConvertInt32())
-			tb.Field("b", flex.Require(), flex.ConvertInt32())
+			tb.Field("a", flex.Require(), flex.Int32())
+			tb.Field("b", flex.Require(), flex.Int32())
 		}),
 		ExecJSONFunc: func(ctx context.Context, params *flex.Record) ([]byte, error) {
 			a := params.Get("a").(int32)
@@ -105,8 +105,8 @@ func TestCommandExecJSON(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
 		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {
-			tb.Field("a", flex.Require(), flex.ConvertInt32())
-			tb.Field("b", flex.Require(), flex.ConvertInt32())
+			tb.Field("a", flex.Require(), flex.Int32())
+			tb.Field("b", flex.Require(), flex.Int32())
 		}),
 		ExecJSONFunc: func(ctx context.Context, params *flex.Record) ([]byte, error) {
 			a := params.Get("a").(int32)
@@ -126,8 +126,8 @@ func TestCommandExecJSONMarshalsExecIfExecJSONUnavailable(t *testing.T) {
 	cmd := flex.Command{
 		Name: "add",
 		ParamsType: flex.NewType(func(tb flex.TypeBuilder) {
-			tb.Field("a", flex.Require(), flex.ConvertInt32())
-			tb.Field("b", flex.Require(), flex.ConvertInt32())
+			tb.Field("a", flex.Require(), flex.Int32())
+			tb.Field("b", flex.Require(), flex.Int32())
 		}),
 		ExecFunc: func(ctx context.Context, params *flex.Record) (map[string]interface{}, error) {
 			a := params.Get("a").(int32)

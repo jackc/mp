@@ -21,7 +21,7 @@ func TestType(t *testing.T) {
 
 func TestTypeNewError(t *testing.T) {
 	ft := flex.Type{}
-	ft.Field("age", flex.ConvertInt64())
+	ft.Field("age", flex.Int64())
 
 	record := ft.New(map[string]interface{}{"age": "abc"})
 	require.Error(t, record.Errors())
@@ -97,7 +97,26 @@ func TestRequiredNotNil(t *testing.T) {
 	}
 }
 
-func TestConvertInt64(t *testing.T) {
+func TestRequire(t *testing.T) {
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{"foo", "foo", true},
+		{"", nil, false},
+		{nil, nil, false},
+		{flex.UndefinedValue, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.Require().ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
+func TestInt64(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -108,18 +127,18 @@ func TestConvertInt64(t *testing.T) {
 		{" 2 ", int64(2), true},
 		{"10.5", nil, false},
 		{"abc", nil, false},
-		{nil, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{nil, nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertInt64().ConvertValue(tt.value)
+		value, err := flex.Int64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestConvertFloat64(t *testing.T) {
+func TestFloat64(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -130,18 +149,18 @@ func TestConvertFloat64(t *testing.T) {
 		{" 2 ", float64(2), true},
 		{"10.5", float64(10.5), true},
 		{"abc", nil, false},
-		{nil, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{nil, nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertFloat64().ConvertValue(tt.value)
+		value, err := flex.Float64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestConvertFloat32(t *testing.T) {
+func TestFloat32(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -152,18 +171,18 @@ func TestConvertFloat32(t *testing.T) {
 		{" 2 ", float32(2), true},
 		{"10.5", float32(10.5), true},
 		{"abc", nil, false},
-		{nil, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{nil, nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertFloat32().ConvertValue(tt.value)
+		value, err := flex.Float32().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestConvertBool(t *testing.T) {
+func TestBool(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -177,18 +196,18 @@ func TestConvertBool(t *testing.T) {
 		{"f", false, true},
 		{" true ", true, true},
 		{"abc", nil, false},
-		{nil, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{nil, nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertBool().ConvertValue(tt.value)
+		value, err := flex.Bool().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestConvertDecimal(t *testing.T) {
+func TestDecimal(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -198,13 +217,13 @@ func TestConvertDecimal(t *testing.T) {
 		{1, decimal.NewFromInt(1), true},
 		{"10.5", decimal.NewFromFloat(10.5), true},
 		{" 7.7 ", decimal.NewFromFloat(7.7), true},
-		{flex.UndefinedValue, nil, false},
-		{nil, nil, false},
+		{nil, nil, true},
+		{flex.UndefinedValue, flex.UndefinedValue, true},
 		{"abc", nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertDecimal().ConvertValue(tt.value)
+		value, err := flex.Decimal().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -252,7 +271,7 @@ func TestConvertStringSlice(t *testing.T) {
 	}
 }
 
-func TestNormalizeTextField(t *testing.T) {
+func TestTextField(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -267,12 +286,12 @@ func TestNormalizeTextField(t *testing.T) {
 		{value: "a\u200Ba", expected: "a a", success: true, msg: "replace non-normal spaces"},
 		{value: "a\ta", expected: "a a", success: true, msg: "replace control character"},
 		{value: "a\r\n", expected: "a", success: true, msg: "trim happens after replaced control character"},
-		{value: flex.UndefinedValue, expected: nil, success: false, msg: "undefined"},
-		{value: nil, expected: nil, success: false, msg: "nil"},
+		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: nil, expected: nil, success: true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.NormalizeTextField().ConvertValue(tt.value)
+		value, err := flex.TextField().ConvertValue(tt.value)
 		assert.Equalf(t, tt.success, err == nil, "%d: %s", i, tt.msg)
 		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
 	}
@@ -526,8 +545,8 @@ func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
 func BenchmarkNewTypeAndRecord(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ft := flex.Type{}
-		ft.Field("name", flex.ConvertString())
-		ft.Field("age", flex.ConvertInt32())
+		ft.Field("name", flex.String())
+		ft.Field("age", flex.Int32())
 
 		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
@@ -536,8 +555,8 @@ func BenchmarkNewTypeAndRecord(b *testing.B) {
 
 func BenchmarkRecord(b *testing.B) {
 	ft := flex.Type{}
-	ft.Field("name", flex.ConvertString())
-	ft.Field("age", flex.ConvertInt32())
+	ft.Field("name", flex.String())
+	ft.Field("age", flex.Int32())
 
 	for i := 0; i < b.N; i++ {
 		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})

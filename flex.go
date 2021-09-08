@@ -204,8 +204,13 @@ func convertInt64(value interface{}) (int64, error) {
 	return num, nil
 }
 
-func ConvertInt64() ValueConverter {
+// Int64 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+func Int64() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		n, err := convertInt64(value)
 		if err != nil {
 			return nil, err
@@ -231,8 +236,13 @@ func convertInt32(value interface{}) (int32, error) {
 	return int32(n), nil
 }
 
-func ConvertInt32() ValueConverter {
+// Int32 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+func Int32() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		n, err := convertInt32(value)
 		if err != nil {
 			return nil, err
@@ -280,8 +290,13 @@ func convertFloat64(value interface{}) (float64, error) {
 	return num, nil
 }
 
-func ConvertFloat64() ValueConverter {
+// Float64 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+func Float64() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		n, err := convertFloat64(value)
 		if err != nil {
 			return nil, err
@@ -307,8 +322,13 @@ func convertFloat32(value interface{}) (float32, error) {
 	return float32(n), nil
 }
 
-func ConvertFloat32() ValueConverter {
+// Float32 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+func Float32() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		n, err := convertFloat32(value)
 		if err != nil {
 			return nil, err
@@ -318,8 +338,12 @@ func ConvertFloat32() ValueConverter {
 	})
 }
 
-func ConvertBool() ValueConverter {
+func Bool() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		switch value := value.(type) {
 		case bool:
 			return value, nil
@@ -336,8 +360,12 @@ func ConvertBool() ValueConverter {
 	})
 }
 
-func ConvertUUID() ValueConverter {
+func UUID() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		var uuidValue uuid.UUID
 		var err error
 
@@ -376,8 +404,12 @@ func convertDecimal(value interface{}) (decimal.Decimal, error) {
 	}
 }
 
-func ConvertDecimal() ValueConverter {
+func Decimal() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		n, err := convertDecimal(value)
 		if err != nil {
 			return nil, err
@@ -398,8 +430,13 @@ func convertString(value interface{}) string {
 	return fmt.Sprintf("%v", value)
 }
 
-func ConvertString() ValueConverter {
+// String returns a ValueConverter that converts to a string. Nil and UndefinedValue are returned unmodified.
+func String() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		return convertString(value), nil
 	})
 }
@@ -475,6 +512,10 @@ func Require() ValueConverter {
 			}
 		}
 
+		if value == "" {
+			return nil, errors.New("cannot be empty")
+		}
+
 		return value, nil
 	})
 }
@@ -513,13 +554,19 @@ func IfNotNil(converters ...ValueConverter) ValueConverter {
 	})
 }
 
-// NormalizeTextField performed common normalization for a single line string. It performs the following operations:
+// TextField returns a ValueConverter that converts to a normalized string. Nil and UndefinedValue are returned
+// unmodified.
 //
+// It performs the following operations:
 // Remove any invalid UTF-8
 // Replace non-printable characters with standard space
 // Remove spaces from left and right
-func NormalizeTextField() ValueConverter {
+func TextField() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		if s, ok := value.(string); ok {
 			return normalizeOneLineString(s), nil
 		}
