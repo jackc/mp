@@ -229,7 +229,7 @@ func TestDecimal(t *testing.T) {
 	}
 }
 
-func TestConvertInt32Slice(t *testing.T) {
+func TestInt32Slice(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -238,20 +238,20 @@ func TestConvertInt32Slice(t *testing.T) {
 		{[]int32{1, 2, 3}, []int32{1, 2, 3}, true},
 		{[]interface{}{"1", "2", "3"}, []int32{1, 2, 3}, true},
 		{[]interface{}{"1", 2, "3"}, []int32{1, 2, 3}, true},
-		{flex.UndefinedValue, nil, false},
-		{nil, nil, false},
+		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 		{42, nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertInt32Slice().ConvertValue(tt.value)
+		value, err := flex.Int32Slice().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestConvertStringSlice(t *testing.T) {
+func TestStringSlice(t *testing.T) {
 	tests := []struct {
 		value    interface{}
 		expected interface{}
@@ -259,13 +259,13 @@ func TestConvertStringSlice(t *testing.T) {
 	}{
 		{[]string{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
 		{[]interface{}{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
-		{flex.UndefinedValue, nil, false},
-		{nil, nil, false},
+		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.ConvertStringSlice().ConvertValue(tt.value)
+		value, err := flex.StringSlice().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}

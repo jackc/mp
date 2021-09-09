@@ -441,8 +441,12 @@ func String() ValueConverter {
 	})
 }
 
-func ConvertStringSlice() ValueConverter {
+func StringSlice() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		switch value := value.(type) {
 		case []string:
 			return value, nil
@@ -458,8 +462,12 @@ func ConvertStringSlice() ValueConverter {
 	})
 }
 
-func ConvertInt32Slice() ValueConverter {
+func Int32Slice() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
 		var err error
 
 		switch value := value.(type) {
