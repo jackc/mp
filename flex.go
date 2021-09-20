@@ -125,6 +125,24 @@ func (e Errors) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+type sliceElementError struct {
+	Index int
+	Err   error
+}
+
+type sliceElementErrors []sliceElementError
+
+func (e sliceElementErrors) Error() string {
+	sb := &strings.Builder{}
+	for i, ee := range e {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		fmt.Fprintf(sb, "Element %d: %v", ee.Index, ee.Err)
+	}
+	return sb.String()
+}
+
 type Record struct {
 	t         *Type
 	original  map[string]interface{}
@@ -438,6 +456,37 @@ func String() ValueConverter {
 		}
 
 		return convertString(value), nil
+	})
+}
+
+func RecordSlice(t *Type) ValueConverter {
+	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
+		if value, ok := value.([]interface{}); ok {
+			var elErrs sliceElementErrors
+			rs := make([]*Record, len(value))
+			for i := range value {
+				if r, ok := value[i].(map[string]interface{}); ok {
+					rs[i] = t.New(r)
+					if rs[i].Errors() != nil {
+						elErrs = append(elErrs, sliceElementError{Index: i, Err: rs[i].Errors()})
+					}
+				} else {
+					return nil, fmt.Errorf("cannot convert to element %d to record", i)
+				}
+			}
+
+			if elErrs != nil {
+				return nil, elErrs
+			}
+
+			return rs, nil
+		}
+
+		return nil, errors.New("cannot convert to record slice")
 	})
 }
 

@@ -229,6 +229,42 @@ func TestDecimal(t *testing.T) {
 	}
 }
 
+func TestRecordSlice(t *testing.T) {
+	flexType := flex.NewType(func(tb flex.TypeBuilder) {
+		tb.Field("n", flex.Int32(), flex.Require())
+	})
+
+	tests := []struct {
+		value    interface{}
+		expected interface{}
+		success  bool
+	}{
+		{
+			value:    []interface{}{map[string]interface{}{"n": 1}, map[string]interface{}{"n": 2}},
+			expected: []*flex.Record{flexType.New(map[string]interface{}{"n": 1}), flexType.New(map[string]interface{}{"n": 2})},
+			success:  true,
+		},
+		{
+			value:    []interface{}{map[string]interface{}{"n": 1}, map[string]interface{}{"n": "abc"}},
+			expected: nil,
+			success:  false,
+		},
+		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: nil, expected: nil, success: true},
+		{[]int32{1, 2, 3}, nil, false},
+		{[]interface{}{"1", "2", "3"}, nil, false},
+		{[]interface{}{"1", 2, "3"}, nil, false},
+		{"abc", nil, false},
+		{42, nil, false},
+	}
+
+	for i, tt := range tests {
+		value, err := flex.RecordSlice(flexType).ConvertValue(tt.value)
+		assert.Equalf(t, tt.expected, value, "%d", i)
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestInt32Slice(t *testing.T) {
 	tests := []struct {
 		value    interface{}
