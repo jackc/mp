@@ -46,6 +46,13 @@ func TestRecordAttrs(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"a": "1", "b": "2", "c": "3"}, record.Attrs())
 }
 
+func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
+	ft := flex.Type{}
+	ft.Field("a")
+	record := ft.New(map[string]interface{}{"b": "2"})
+	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
+}
+
 func TestRecordPick(t *testing.T) {
 	ft := flex.Type{}
 	ft.Field("a")
@@ -60,6 +67,18 @@ func TestRecordPick(t *testing.T) {
 
 	attrs = record.Pick("c", "d")
 	assert.Equal(t, map[string]interface{}{"c": "3"}, attrs)
+}
+
+func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
+	ft := flex.Type{}
+	ft.Field("a")
+	ft.Field("b")
+	ft.Field("c")
+	ft.Field("d")
+
+	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
+
+	assert.PanicsWithError(t, `"z" is not a field of type`, func() { record.Pick("a", "b", "z") })
 }
 
 func TestRequiredDefined(t *testing.T) {

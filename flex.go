@@ -48,6 +48,7 @@ func (t *Type) Field(name string, converters ...ValueConverter) {
 
 func (t *Type) New(attrs map[string]interface{}) *Record {
 	r := &Record{
+		t:         t,
 		original:  attrs,
 		converted: make(map[string]interface{}, len(attrs)),
 		errors:    make(map[string]error, len(attrs)),
@@ -151,6 +152,10 @@ type Record struct {
 }
 
 func (r *Record) Get(s string) interface{} {
+	if _, ok := r.t.fields[s]; !ok {
+		panic(fmt.Errorf("%q is not a field of type", s))
+	}
+
 	return r.converted[s]
 }
 
@@ -165,6 +170,10 @@ func (r *Record) Errors() error {
 func (r *Record) Pick(keys ...string) map[string]interface{} {
 	m := make(map[string]interface{}, len(keys))
 	for _, k := range keys {
+		if _, ok := r.t.fields[k]; !ok {
+			panic(fmt.Errorf("%q is not a field of type", k))
+		}
+
 		if value, ok := r.converted[k]; ok {
 			m[k] = value
 		}
