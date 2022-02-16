@@ -144,6 +144,8 @@ func TestInt64(t *testing.T) {
 		{1, int64(1), true},
 		{"1", int64(1), true},
 		{" 2 ", int64(2), true},
+		{float32(12345678), int64(12345678), true},
+		{float64(1234567890), int64(1234567890), true},
 		{"10.5", nil, false},
 		{"abc", nil, false},
 		{nil, nil, true},

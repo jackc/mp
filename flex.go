@@ -219,6 +219,28 @@ func convertInt64(value interface{}) (int64, error) {
 			return 0, errors.New("greater than maximum allowed number")
 		}
 		return int64(value), nil
+	case float32:
+		if value < math.MinInt64 {
+			return 0, errors.New("less than minimum allowed number")
+		}
+		if value > math.MaxInt64 {
+			return 0, errors.New("greater than maximum allowed number")
+		}
+		if float32(int64(value)) != value {
+			return 0, errors.New("not a valid number")
+		}
+		return int64(value), nil
+	case float64:
+		if value < math.MinInt64 {
+			return 0, errors.New("less than minimum allowed number")
+		}
+		if value > math.MaxInt64 {
+			return 0, errors.New("greater than maximum allowed number")
+		}
+		if float64(int64(value)) != value {
+			return 0, errors.New("not a valid number")
+		}
+		return int64(value), nil
 	}
 
 	s := fmt.Sprintf("%v", value)
