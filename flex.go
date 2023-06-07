@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/shopspring/decimal"
 )
 
