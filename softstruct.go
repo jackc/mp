@@ -1,3 +1,14 @@
+// Package softstruct provides "soft" structures that are created at runtime.
+//
+// The purpose of this package is to make it easy to parse and validate JSON or form submissions and to represent a
+// runtime defined record.
+//
+// A Type is a definition of a structure. It is defined by a set of fields. Each field has a name and a set of
+// ValueConverters. A ValueConverter is a function that converts a value to a different type or validates the value.
+//
+// A Record is an "instance" of a Type. It is created by calling Type.New with a map[string]any. The map is converted to
+// a Record by applying the ValueConverters for each field. If any of the ValueConverters fail then the Record is
+// considered invalid. The original map and the errors are stored in the Record.
 package softstruct
 
 import (
@@ -44,6 +55,7 @@ func (t *Type) Field(name string, converters ...ValueConverter) {
 	t.fields[name] = &field{name: name, converters: converters}
 }
 
+// New creates a Record from attrs.
 func (t *Type) New(attrs map[string]any) *Record {
 	r := &Record{
 		t:         t,
@@ -155,6 +167,7 @@ func (e sliceElementErrors) Error() string {
 	return sb.String()
 }
 
+// Record is an "instance" of a type. It is created by calling Type.New.
 type Record struct {
 	t         *Type
 	original  map[string]any
