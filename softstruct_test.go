@@ -237,7 +237,7 @@ func TestDecimal(t *testing.T) {
 	}
 }
 
-func TestRecordSlice(t *testing.T) {
+func TestSliceRecord(t *testing.T) {
 	softstructType := softstruct.NewType(func(tb softstruct.TypeBuilder) {
 		tb.Field("n", softstruct.Int32(), softstruct.Require())
 	})
@@ -266,7 +266,7 @@ func TestRecordSlice(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RecordSlice(softstructType).ConvertValue(tt.value)
+		value, err := softstruct.Slice[*softstruct.Record](softstructType).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}

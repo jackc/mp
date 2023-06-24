@@ -19,6 +19,9 @@ type field struct {
 	converters []ValueConverter
 }
 
+// Type is a type that can be used to convert a map[string]any to a Record.
+//
+// It implements the ValueConverter interface so it can be used to build nested structs.
 type Type struct {
 	fields map[string]*field
 }
@@ -68,6 +71,24 @@ func (t *Type) New(attrs map[string]any) *Record {
 	}
 
 	return r
+}
+
+// ConvertValue converts a map[string]any to a Record. If v is nil then nil is returned.
+func (t *Type) ConvertValue(v any) (any, error) {
+	if v == nil {
+		return nil, nil
+	}
+
+	if m, ok := v.(map[string]any); ok {
+		record := t.New(m)
+		if record.Errors() != nil {
+			return nil, record.Errors()
+		}
+
+		return record, nil
+	}
+
+	return nil, errors.New("cannot convert to record")
 }
 
 type ValueConverter interface {
@@ -500,37 +521,8 @@ func String() ValueConverter {
 	})
 }
 
-func RecordSlice(t *Type) ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return nil, nil
-		}
-
-		if value, ok := value.([]any); ok {
-			var elErrs sliceElementErrors
-			rs := make([]*Record, len(value))
-			for i := range value {
-				if r, ok := value[i].(map[string]any); ok {
-					rs[i] = t.New(r)
-					if rs[i].Errors() != nil {
-						elErrs = append(elErrs, sliceElementError{Index: i, Err: rs[i].Errors()})
-					}
-				} else {
-					return nil, fmt.Errorf("cannot convert to element %d to record", i)
-				}
-			}
-
-			if elErrs != nil {
-				return nil, elErrs
-			}
-
-			return rs, nil
-		}
-
-		return nil, errors.New("cannot convert to record slice")
-	})
-}
-
+// Slice returns a ValueConverter that converts value to a []T. value must be a []T or []any. If value is nil then nil
+// is returned.
 func Slice[T any](elementConverter ValueConverter) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
