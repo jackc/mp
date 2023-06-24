@@ -420,24 +420,61 @@ func TestMaxLen(t *testing.T) {
 	}
 }
 
-func TestRequireStringInclusion(t *testing.T) {
+func TestAllowStrings(t *testing.T) {
 	tests := []struct {
-		value    any
-		expected any
-		success  bool
+		value         any
+		allowedValues []string
+		errMatcher    *regexp.Regexp
 	}{
-		{"foo", "foo", true},
-		{"bar", nil, false},
-		{"baz", "baz", true},
-		{"", nil, false},
-		{1, nil, false},
-		{nil, nil, false},
+		{
+			value:         "foo",
+			allowedValues: []string{"foo", "bar"},
+			errMatcher:    nil,
+		},
+		{
+			value:         "quz",
+			allowedValues: []string{"foo", "bar"},
+			errMatcher:    regexp.MustCompile(`not allowed value`),
+		},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireStringInclusion([]string{"foo", "baz", "abc"}).ConvertValue(tt.value)
-		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		value, err := softstruct.AllowStrings(tt.allowedValues...).ConvertValue(tt.value)
+		if tt.errMatcher == nil {
+			assert.Equalf(t, tt.value, value, "%d", i)
+			assert.NoError(t, err, "%d", i)
+		} else {
+			assert.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
+	}
+}
+
+func TestExcludeStrings(t *testing.T) {
+	tests := []struct {
+		value          any
+		excludedValues []string
+		errMatcher     *regexp.Regexp
+	}{
+		{
+			value:          "foo",
+			excludedValues: []string{"foo", "bar"},
+			errMatcher:     regexp.MustCompile(`not allowed value`),
+		},
+		{
+			value:          "quz",
+			excludedValues: []string{"foo", "bar"},
+			errMatcher:     nil,
+		},
+	}
+
+	for i, tt := range tests {
+		value, err := softstruct.ExcludeStrings(tt.excludedValues...).ConvertValue(tt.value)
+		if tt.errMatcher == nil {
+			assert.Equalf(t, tt.value, value, "%d", i)
+			assert.NoError(t, err, "%d", i)
+		} else {
+			assert.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
 	}
 }
 

@@ -780,18 +780,56 @@ func MaxLen(max int) ValueConverter {
 	})
 }
 
-func RequireStringInclusion(options []string) ValueConverter {
-	return requireStringTest(
-		func(s string) bool {
-			for _, o := range options {
-				if s == o {
-					return true
-				}
-			}
-			return false
-		},
-		errors.New("not allowed value"),
-	)
+// AllowStrings returns a ValueConverter that returns an error unless value is one of the allowedItems. If value is nil
+// then nil is returned. If value is not a string then an error is returned.
+func AllowStrings(allowedItems ...string) ValueConverter {
+	set := make(map[string]struct{}, len(allowedItems))
+	for _, item := range allowedItems {
+		set[item] = struct{}{}
+	}
+
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil {
+			return value, nil
+		}
+
+		s, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("not allowed value")
+		}
+
+		if _, ok := set[s]; !ok {
+			return nil, fmt.Errorf("not allowed value")
+		}
+
+		return value, nil
+	})
+}
+
+// ExcludeStrings returns a ValueConverter that returns an error if value is one of the excludedItems. If value is nil
+// then nil is returned. If value is not a string then an error is returned.
+func ExcludeStrings(excludedItems ...string) ValueConverter {
+	set := make(map[string]struct{}, len(excludedItems))
+	for _, item := range excludedItems {
+		set[item] = struct{}{}
+	}
+
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil {
+			return value, nil
+		}
+
+		s, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("not allowed value")
+		}
+
+		if _, ok := set[s]; ok {
+			return nil, fmt.Errorf("not allowed value")
+		}
+
+		return value, nil
+	})
 }
 
 func tryDecimal(value any) (n decimal.Decimal, ok bool) {
