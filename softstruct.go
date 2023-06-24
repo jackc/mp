@@ -285,7 +285,7 @@ func convertInt32(value interface{}) (int32, error) {
 	return int32(n), nil
 }
 
-// Int32 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+// Int32 returns a ValueConverter that converts to an int32. Nil and UndefinedValue are returned unmodified.
 func Int32() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		if value == nil || value == UndefinedValue {
@@ -339,7 +339,7 @@ func convertFloat64(value interface{}) (float64, error) {
 	return num, nil
 }
 
-// Float64 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+// Float64 returns a ValueConverter that converts to an float64. Nil and UndefinedValue are returned unmodified.
 func Float64() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		if value == nil || value == UndefinedValue {
@@ -371,7 +371,7 @@ func convertFloat32(value interface{}) (float32, error) {
 	return float32(n), nil
 }
 
-// Float32 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+// Float32 returns a ValueConverter that converts to an float32. Nil and UndefinedValue are returned unmodified.
 func Float32() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
 		if value == nil || value == UndefinedValue {
