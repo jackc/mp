@@ -243,9 +243,11 @@ func convertInt64(value any) (int64, error) {
 	return num, nil
 }
 
-// Int64 returns a ValueConverter that converts value to an int64. nil is returned unmodified.
+// Int64 returns a ValueConverter that converts value to an int64. If value is nil or a blank string nil is returned.
 func Int64() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return nil, nil
 		}
@@ -275,9 +277,11 @@ func convertInt32(value any) (int32, error) {
 	return int32(n), nil
 }
 
-// Int32 returns a ValueConverter that converts value to an int32. nil is returned unmodified.
+// Int32 returns a ValueConverter that converts value to an int32. If value is nil or a blank string nil is returned.
 func Int32() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return nil, nil
 		}
@@ -329,9 +333,11 @@ func convertFloat64(value any) (float64, error) {
 	return num, nil
 }
 
-// Float64 returns a ValueConverter that converts value to an float64. nil is returned unmodified.
+// Float64 returns a ValueConverter that converts value to an float64. If value is nil or a blank string nil is returned.
 func Float64() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return value, nil
 		}
@@ -361,9 +367,12 @@ func convertFloat32(value any) (float32, error) {
 	return float32(n), nil
 }
 
-// Float32 returns a ValueConverter that converts value to an float32. nil is returned unmodified.
+// Float32 returns a ValueConverter that converts value to an float32. If value is nil or a blank string nil is
+// returned.
 func Float32() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return value, nil
 		}
@@ -377,9 +386,11 @@ func Float32() ValueConverter {
 	})
 }
 
-// Bool returns a ValueConverter that converts value to a bool. nil is returned unmodified.
+// Bool returns a ValueConverter that converts value to a bool. If value is nil or a blank string nil is returned.
 func Bool() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return nil, nil
 		}
@@ -400,9 +411,11 @@ func Bool() ValueConverter {
 	})
 }
 
-// UUID returns a ValueConverter that converts value to a uuid.UUID. nil is returned unmodified.
+// UUID returns a ValueConverter that converts value to a uuid.UUID. If value is nil or a blank string nil is returned.
 func UUID() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return nil, nil
 		}
@@ -445,9 +458,12 @@ func convertDecimal(value any) (decimal.Decimal, error) {
 	}
 }
 
-// Decimal returns a ValueConverter that converts value to a decimal.Decimal. nil is returned unmodified.
+// Decimal returns a ValueConverter that converts value to a decimal.Decimal. If value is nil or a blank string nil is
+// returned.
 func Decimal() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
 		if value == nil {
 			return nil, nil
 		}
@@ -634,6 +650,20 @@ func TextField() ValueConverter {
 		}
 		return nil, errors.New("not a string")
 	})
+}
+
+// normalizeForParsing prepares value for parsing. If the value is not a string it is returned. Otherwise, space is
+// trimmed from both sides of the string. If the string is now empty then nil is returned. Otherwise, the string is
+// returned.
+func normalizeForParsing(value any) any {
+	if s, ok := value.(string); ok {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return nil
+		}
+		return s
+	}
+	return value
 }
 
 func normalizeOneLineString(s string) string {

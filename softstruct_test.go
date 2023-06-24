@@ -131,6 +131,8 @@ func TestInt64(t *testing.T) {
 		{"10.5", nil, false},
 		{"abc", nil, false},
 		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
 	}
 
 	for i, tt := range tests {
@@ -152,6 +154,8 @@ func TestFloat64(t *testing.T) {
 		{"10.5", float64(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
 	}
 
 	for i, tt := range tests {
@@ -173,6 +177,8 @@ func TestFloat32(t *testing.T) {
 		{"10.5", float32(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
 	}
 
 	for i, tt := range tests {
@@ -197,6 +203,8 @@ func TestBool(t *testing.T) {
 		{" true ", true, true},
 		{"abc", nil, false},
 		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
 	}
 
 	for i, tt := range tests {
@@ -217,6 +225,8 @@ func TestDecimal(t *testing.T) {
 		{"10.5", decimal.NewFromFloat(10.5), true},
 		{" 7.7 ", decimal.NewFromFloat(7.7), true},
 		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
 		{"abc", nil, false},
 	}
 
