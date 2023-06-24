@@ -774,6 +774,61 @@ func RequireStringInclusion(options []string) ValueConverter {
 	)
 }
 
+func tryDecimal(value any) (n decimal.Decimal, ok bool) {
+	var strValue string
+	switch value := value.(type) {
+	case decimal.Decimal:
+		return value, true
+	case int32:
+		return decimal.NewFromInt32(value), true
+	case int64:
+		return decimal.NewFromInt(value), true
+	case int:
+		return decimal.NewFromInt(int64(value)), true
+	case float32:
+		return decimal.NewFromFloat32(value), true
+	case float64:
+		return decimal.NewFromFloat(value), true
+	case string:
+		strValue = value
+	default:
+		strValue = fmt.Sprint(value)
+	}
+
+	n, err := decimal.NewFromString(strValue)
+	if err != nil {
+		return decimal.Zero, false
+	}
+
+	return n, true
+}
+
+// LessThan returns a ValueConverter that fails if value >= x. x must be convertable to a decimal number or LessThan
+// panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
+func LessThan(x any) ValueConverter {
+	dx, ok := tryDecimal(x)
+	if !ok {
+		panic(fmt.Errorf("%v is not convertable to a decimal number", x))
+	}
+
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
+		n, ok := tryDecimal(value)
+		if !ok {
+			return nil, fmt.Errorf("not a number")
+		}
+
+		if !n.LessThan(dx) {
+			return nil, fmt.Errorf("too large")
+		}
+
+		return value, nil
+	})
+}
+
 func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		n, ok := value.(decimal.Decimal)
@@ -787,10 +842,6 @@ func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueCon
 
 		return nil, failErr
 	})
-}
-
-func RequireDecimalLessThan(x decimal.Decimal) ValueConverter {
-	return requireDecimalTest(func(n decimal.Decimal) bool { return n.LessThan(x) }, errors.New("too large"))
 }
 
 func RequireDecimalLessThanOrEqual(x decimal.Decimal) ValueConverter {
@@ -818,10 +869,6 @@ func requireInt64Test(test func(int64) bool, failErr error) ValueConverter {
 
 		return nil, failErr
 	})
-}
-
-func RequireInt64LessThan(x int64) ValueConverter {
-	return requireInt64Test(func(n int64) bool { return n < x }, errors.New("too large"))
 }
 
 func RequireInt64LessThanOrEqual(x int64) ValueConverter {
