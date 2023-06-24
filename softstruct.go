@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
@@ -701,12 +702,61 @@ func requireStringTest(test func(string) bool, failErr error) ValueConverter {
 	})
 }
 
-func RequireStringMinLength(n int) ValueConverter {
-	return requireStringTest(func(s string) bool { return len(s) >= n }, errors.New("too short"))
+func tryLen(value any) (n int, ok bool) {
+	s, ok := value.(string)
+	if ok {
+		return len(s), true
+	}
+
+	refval := reflect.ValueOf(value)
+	switch refval.Kind() {
+	case reflect.String, reflect.Slice, reflect.Map:
+		return refval.Len(), true
+	}
+
+	return 0, false
 }
 
-func RequireStringMaxLength(n int) ValueConverter {
-	return requireStringTest(func(s string) bool { return len(s) <= n }, errors.New("too long"))
+// MinLen returns a ValueConverter that fails if len(value) < min. value must be a string, slice, or map. nil and
+// UndefinedValue are returned unmodified.
+func MinLen(min int) ValueConverter {
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
+		n, ok := tryLen(value)
+		if !ok {
+			return nil, errors.New("not a string, slice or map")
+		}
+
+		if n < min {
+			return nil, fmt.Errorf("too short")
+		}
+
+		return value, nil
+	})
+}
+
+// MaxLen returns a ValueConverter that fails if len(value) > max. value must be a string, slice, or map. nil and
+// UndefinedValue are returned unmodified.
+func MaxLen(max int) ValueConverter {
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
+		n, ok := tryLen(value)
+		if !ok {
+			return nil, errors.New("not a string, slice or map")
+		}
+
+		if n > max {
+			return nil, fmt.Errorf("too long")
+		}
+
+		return value, nil
+	})
 }
 
 func RequireStringInclusion(options []string) ValueConverter {

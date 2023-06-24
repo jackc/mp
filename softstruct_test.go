@@ -1,6 +1,7 @@
 package softstruct_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/jackc/softstruct"
@@ -373,47 +374,64 @@ func TestNilifyEmptyString(t *testing.T) {
 	}
 }
 
-func TestRequireStringMinLength(t *testing.T) {
+func TestMinLen(t *testing.T) {
 	tests := []struct {
-		value    any
-		expected any
-		length   int
-		success  bool
+		value      any
+		expected   any
+		length     int
+		errMatcher *regexp.Regexp
 	}{
-		{"foo", "foo", 1, true},
-		{"f", "f", 1, true},
-		{"", nil, 1, false},
-		{1, nil, 1, false},
-		{softstruct.UndefinedValue, nil, 1, false},
-		{nil, nil, 1, false},
+		{"foo", "foo", 1, nil},
+		{"f", "f", 1, nil},
+		{"", nil, 1, regexp.MustCompile(`short`)},
+		{1, nil, 1, regexp.MustCompile(`not a string`)},
+		{[]int{1, 2, 3}, []int{1, 2, 3}, 1, nil},
+		{[]int{}, nil, 1, regexp.MustCompile(`short`)},
+		{map[string]any{}, nil, 1, regexp.MustCompile(`short`)},
+		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}, 1, nil},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, 1, nil},
+		{nil, nil, 1, nil},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireStringMinLength(tt.length).ConvertValue(tt.value)
+		value, err := softstruct.MinLen(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		if tt.errMatcher == nil {
+			require.NoError(t, err, "%d", i)
+		} else {
+			require.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
 	}
 }
 
-func TestRequireStringMaxLength(t *testing.T) {
+func TestMaxLen(t *testing.T) {
 	tests := []struct {
-		value    any
-		expected any
-		length   int
-		success  bool
+		value      any
+		expected   any
+		length     int
+		errMatcher *regexp.Regexp
 	}{
-		{"f", "f", 3, true},
-		{"foo", "foo", 3, true},
-		{"", "", 1, true},
-		{1, nil, 1, false},
-		{softstruct.UndefinedValue, nil, 1, false},
-		{nil, nil, 1, false},
+		{"foo", "foo", 3, nil},
+		{"f", "f", 3, nil},
+		{"", "", 3, nil},
+		{"abcd", nil, 3, regexp.MustCompile(`long`)},
+		{1, nil, 3, regexp.MustCompile(`not a string`)},
+		{[]int{1, 2, 3}, []int{1, 2, 3}, 3, nil},
+		{[]int{1, 2, 3, 4}, nil, 3, regexp.MustCompile(`long`)},
+		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}, 2, nil},
+		{map[string]any{"foo": "bar", "baz": "quz"}, nil, 1, regexp.MustCompile(`long`)},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, 1, nil},
+		{nil, nil, 1, nil},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireStringMaxLength(tt.length).ConvertValue(tt.value)
+		value, err := softstruct.MaxLen(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		if tt.errMatcher == nil {
+			require.NoError(t, err, "%d", i)
+		} else {
+			require.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
 	}
 }
 
