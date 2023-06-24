@@ -82,7 +82,7 @@ func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
 	assert.PanicsWithError(t, `"z" is not a field of type`, func() { record.Pick("a", "b", "z") })
 }
 
-func TestRequiredDefined(t *testing.T) {
+func TestDefined(t *testing.T) {
 	tests := []struct {
 		value    any
 		expected any
@@ -94,13 +94,13 @@ func TestRequiredDefined(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireDefined().ConvertValue(tt.value)
+		value, err := softstruct.Defined().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestRequiredNotNil(t *testing.T) {
+func TestNotNil(t *testing.T) {
 	tests := []struct {
 		value    any
 		expected any
@@ -111,7 +111,7 @@ func TestRequiredNotNil(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireNotNil().ConvertValue(tt.value)
+		value, err := softstruct.NotNil().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}

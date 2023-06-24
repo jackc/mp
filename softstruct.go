@@ -569,7 +569,8 @@ func Int32Slice() ValueConverter {
 	})
 }
 
-func RequireDefined() ValueConverter {
+// Defined returns a ValueConverter that fails if value is undefined.
+func Defined() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == UndefinedValue {
 			return nil, errors.New("must be defined")
@@ -578,7 +579,8 @@ func RequireDefined() ValueConverter {
 	})
 }
 
-func RequireNotNil() ValueConverter {
+// NotNil returns a ValueConverter that fails if value is nil.
+func NotNil() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
 			return nil, errors.New("cannot be nil")
@@ -587,22 +589,23 @@ func RequireNotNil() ValueConverter {
 	})
 }
 
+// Required returns a ValueConverter that fails if value is undefined, nil, or empty. Empty is defined by the same rules
+// as NilifyEmpty.
 func Require() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		valueConverters := []ValueConverter{
-			RequireDefined(),
-			RequireNotNil(),
-		}
+	valueConverters := []ValueConverter{
+		Defined(),
+		NilifyEmpty(),
+		NotNil(),
+	}
 
+	return ValueConverterFunc(func(value any) (any, error) {
+		v := value
 		for _, vc := range valueConverters {
-			_, err := vc.ConvertValue(value)
+			var err error
+			v, err = vc.ConvertValue(v)
 			if err != nil {
 				return nil, err
 			}
-		}
-
-		if value == "" {
-			return nil, errors.New("cannot be empty")
 		}
 
 		return value, nil
