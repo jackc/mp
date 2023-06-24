@@ -633,21 +633,33 @@ func IfNotNil(converters ...ValueConverter) ValueConverter {
 	})
 }
 
-// TextField returns a ValueConverter that converts to a normalized string. nil is returned unmodified.
+// SingleLineString returns a ValueConverter that converts a string value to a normalized string. If value is nil then nil is
+// returned. If value is not a string then an error is returned.
 //
 // It performs the following operations:
 //   - Remove any invalid UTF-8
 //   - Replace non-printable characters with standard space
 //   - Remove spaces from left and right
-func TextField() ValueConverter {
+func SingleLineString() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
 			return nil, nil
 		}
 
 		if s, ok := value.(string); ok {
-			return normalizeOneLineString(s), nil
+			s = strings.ToValidUTF8(s, "")
+			s = strings.Map(func(r rune) rune {
+				if unicode.IsPrint(r) {
+					return r
+				} else {
+					return ' '
+				}
+			}, s)
+			s = strings.TrimSpace(s)
+
+			return s, nil
 		}
+
 		return nil, errors.New("not a string")
 	})
 }
@@ -664,20 +676,6 @@ func normalizeForParsing(value any) any {
 		return s
 	}
 	return value
-}
-
-func normalizeOneLineString(s string) string {
-	s = strings.ToValidUTF8(s, "")
-	s = strings.Map(func(r rune) rune {
-		if unicode.IsPrint(r) {
-			return r
-		} else {
-			return ' '
-		}
-	}, s)
-	s = strings.TrimSpace(s)
-
-	return s
 }
 
 // NilifyEmpty converts strings, slices, and maps where len(value) == 0 to nil. Any other value not modified.

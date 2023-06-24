@@ -312,7 +312,7 @@ func TestStringSlice(t *testing.T) {
 	}
 }
 
-func TestTextField(t *testing.T) {
+func TestSingleLineString(t *testing.T) {
 	tests := []struct {
 		value    any
 		expected any
@@ -331,7 +331,7 @@ func TestTextField(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.TextField().ConvertValue(tt.value)
+		value, err := softstruct.SingleLineString().ConvertValue(tt.value)
 		assert.Equalf(t, tt.success, err == nil, "%d: %s", i, tt.msg)
 		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
 	}
