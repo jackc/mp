@@ -14,12 +14,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type undefinedValueType string
-
-const (
-	UndefinedValue = undefinedValueType("undefined value")
-)
-
 type field struct {
 	name       string
 	converters []ValueConverter
@@ -56,10 +50,7 @@ func (t *Type) New(attrs map[string]any) *Record {
 	}
 
 	for _, f := range t.fields {
-		v, present := attrs[f.name]
-		if !present {
-			v = UndefinedValue
-		}
+		v := attrs[f.name]
 
 		var err error
 		for _, converter := range f.converters {
@@ -70,9 +61,7 @@ func (t *Type) New(attrs map[string]any) *Record {
 		}
 
 		if err == nil {
-			if v != UndefinedValue {
-				r.converted[f.name] = v
-			}
+			r.converted[f.name] = v
 		} else {
 			r.errors[f.name] = err
 		}
@@ -254,11 +243,11 @@ func convertInt64(value any) (int64, error) {
 	return num, nil
 }
 
-// Int64 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
+// Int64 returns a ValueConverter that converts value to an int64. nil is returned unmodified.
 func Int64() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, err := convertInt64(value)
@@ -286,11 +275,11 @@ func convertInt32(value any) (int32, error) {
 	return int32(n), nil
 }
 
-// Int32 returns a ValueConverter that converts to an int32. Nil and UndefinedValue are returned unmodified.
+// Int32 returns a ValueConverter that converts value to an int32. nil is returned unmodified.
 func Int32() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, err := convertInt32(value)
@@ -340,10 +329,10 @@ func convertFloat64(value any) (float64, error) {
 	return num, nil
 }
 
-// Float64 returns a ValueConverter that converts to an float64. Nil and UndefinedValue are returned unmodified.
+// Float64 returns a ValueConverter that converts value to an float64. nil is returned unmodified.
 func Float64() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
+		if value == nil {
 			return value, nil
 		}
 
@@ -372,10 +361,10 @@ func convertFloat32(value any) (float32, error) {
 	return float32(n), nil
 }
 
-// Float32 returns a ValueConverter that converts to an float32. Nil and UndefinedValue are returned unmodified.
+// Float32 returns a ValueConverter that converts value to an float32. nil is returned unmodified.
 func Float32() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
+		if value == nil {
 			return value, nil
 		}
 
@@ -388,10 +377,11 @@ func Float32() ValueConverter {
 	})
 }
 
+// Bool returns a ValueConverter that converts value to a bool. nil is returned unmodified.
 func Bool() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		switch value := value.(type) {
@@ -410,10 +400,11 @@ func Bool() ValueConverter {
 	})
 }
 
+// UUID returns a ValueConverter that converts value to a uuid.UUID. nil is returned unmodified.
 func UUID() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		var uuidValue uuid.UUID
@@ -454,10 +445,11 @@ func convertDecimal(value any) (decimal.Decimal, error) {
 	}
 }
 
+// Decimal returns a ValueConverter that converts value to a decimal.Decimal. nil is returned unmodified.
 func Decimal() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, err := convertDecimal(value)
@@ -480,10 +472,10 @@ func convertString(value any) string {
 	return fmt.Sprintf("%v", value)
 }
 
-// String returns a ValueConverter that converts to a string. Nil and UndefinedValue are returned unmodified.
+// String returns a ValueConverter that converts value to a string. nil is returned unmodified.
 func String() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
+		if value == nil {
 			return value, nil
 		}
 
@@ -493,8 +485,8 @@ func String() ValueConverter {
 
 func RecordSlice(t *Type) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		if value, ok := value.([]any); ok {
@@ -524,8 +516,8 @@ func RecordSlice(t *Type) ValueConverter {
 
 func StringSlice() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		switch value := value.(type) {
@@ -545,8 +537,8 @@ func StringSlice() ValueConverter {
 
 func Int32Slice() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		var err error
@@ -569,16 +561,6 @@ func Int32Slice() ValueConverter {
 	})
 }
 
-// Defined returns a ValueConverter that fails if value is undefined.
-func Defined() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == UndefinedValue {
-			return nil, errors.New("must be defined")
-		}
-		return value, nil
-	})
-}
-
 // NotNil returns a ValueConverter that fails if value is nil.
 func NotNil() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
@@ -589,11 +571,10 @@ func NotNil() ValueConverter {
 	})
 }
 
-// Required returns a ValueConverter that fails if value is undefined, nil, or empty. Empty is defined by the same rules
-// as NilifyEmpty.
+// Required returns a ValueConverter that fails if value is nil or empty. Empty is defined by the same rules as
+// NilifyEmpty.
 func Require() ValueConverter {
 	valueConverters := []ValueConverter{
-		Defined(),
 		NilifyEmpty(),
 		NotNil(),
 	}
@@ -626,16 +607,6 @@ func convertSlice(value any, converters []ValueConverter) (any, error) {
 	return v, err
 }
 
-func IfDefined(converters ...ValueConverter) ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == UndefinedValue {
-			return value, nil
-		}
-
-		return convertSlice(value, converters)
-	})
-}
-
 func IfNotNil(converters ...ValueConverter) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
@@ -646,17 +617,16 @@ func IfNotNil(converters ...ValueConverter) ValueConverter {
 	})
 }
 
-// TextField returns a ValueConverter that converts to a normalized string. Nil and UndefinedValue are returned
-// unmodified.
+// TextField returns a ValueConverter that converts to a normalized string. nil is returned unmodified.
 //
 // It performs the following operations:
-// Remove any invalid UTF-8
-// Replace non-printable characters with standard space
-// Remove spaces from left and right
+//   - Remove any invalid UTF-8
+//   - Replace non-printable characters with standard space
+//   - Remove spaces from left and right
 func TextField() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		if s, ok := value.(string); ok {
@@ -721,12 +691,12 @@ func tryLen(value any) (n int, ok bool) {
 	return 0, false
 }
 
-// MinLen returns a ValueConverter that fails if len(value) < min. value must be a string, slice, or map. nil and
-// UndefinedValue are returned unmodified.
+// MinLen returns a ValueConverter that fails if len(value) < min. value must be a string, slice, or map. nil is
+// returned unmodified.
 func MinLen(min int) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryLen(value)
@@ -742,12 +712,12 @@ func MinLen(min int) ValueConverter {
 	})
 }
 
-// MaxLen returns a ValueConverter that fails if len(value) > max. value must be a string, slice, or map. nil and
-// UndefinedValue are returned unmodified.
+// MaxLen returns a ValueConverter that fails if len(value) > max. value must be a string, slice, or map. nil is
+// returned unmodified.
 func MaxLen(max int) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryLen(value)
@@ -807,7 +777,7 @@ func tryDecimal(value any) (n decimal.Decimal, ok bool) {
 }
 
 // LessThan returns a ValueConverter that fails unless value < x. x must be convertable to a decimal number or LessThan
-// panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
+// panics. value must be convertable to a decimal number. nil is returned unmodified.
 func LessThan(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -815,8 +785,8 @@ func LessThan(x any) ValueConverter {
 	}
 
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryDecimal(value)
@@ -833,8 +803,7 @@ func LessThan(x any) ValueConverter {
 }
 
 // LessThanOrEqual returns a ValueConverter that fails unless value <= x. x must be convertable to a decimal number or
-// LessThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
-// unmodified.
+// LessThanOrEqual panics. value must be convertable to a decimal number. nil is returned unmodified.
 func LessThanOrEqual(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -842,8 +811,8 @@ func LessThanOrEqual(x any) ValueConverter {
 	}
 
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryDecimal(value)
@@ -860,7 +829,7 @@ func LessThanOrEqual(x any) ValueConverter {
 }
 
 // GreaterThan returns a ValueConverter that fails unless value > x. x must be convertable to a decimal number or
-// GreaterThan panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
+// GreaterThan panics. value must be convertable to a decimal number. nil is returned unmodified.
 func GreaterThan(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -868,8 +837,8 @@ func GreaterThan(x any) ValueConverter {
 	}
 
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryDecimal(value)
@@ -886,8 +855,7 @@ func GreaterThan(x any) ValueConverter {
 }
 
 // GreaterThanOrEqual returns a ValueConverter that fails unless value >= x. x must be convertable to a decimal number
-// or GreaterThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
-// unmodified.
+// or GreaterThanOrEqual panics. value must be convertable to a decimal number. nil is returned unmodified.
 func GreaterThanOrEqual(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -895,8 +863,8 @@ func GreaterThanOrEqual(x any) ValueConverter {
 	}
 
 	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == UndefinedValue {
-			return value, nil
+		if value == nil {
+			return nil, nil
 		}
 
 		n, ok := tryDecimal(value)

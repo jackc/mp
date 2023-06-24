@@ -44,7 +44,7 @@ func TestRecordAttrs(t *testing.T) {
 	ft.Field("d")
 
 	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
-	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3"}, record.Attrs())
+	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3", "d": nil}, record.Attrs())
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
@@ -67,7 +67,7 @@ func TestRecordPick(t *testing.T) {
 	assert.Equal(t, map[string]any{"a": "1", "b": "2"}, attrs)
 
 	attrs = record.Pick("c", "d")
-	assert.Equal(t, map[string]any{"c": "3"}, attrs)
+	assert.Equal(t, map[string]any{"c": "3", "d": nil}, attrs)
 }
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
@@ -80,24 +80,6 @@ func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
 	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
 
 	assert.PanicsWithError(t, `"z" is not a field of type`, func() { record.Pick("a", "b", "z") })
-}
-
-func TestDefined(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected any
-		success  bool
-	}{
-		{"foo", "foo", true},
-		{nil, nil, true},
-		{softstruct.UndefinedValue, nil, false},
-	}
-
-	for i, tt := range tests {
-		value, err := softstruct.Defined().ConvertValue(tt.value)
-		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
-	}
 }
 
 func TestNotNil(t *testing.T) {
@@ -126,7 +108,6 @@ func TestRequire(t *testing.T) {
 		{"foo", "foo", true},
 		{"", nil, false},
 		{nil, nil, false},
-		{softstruct.UndefinedValue, nil, false},
 	}
 
 	for i, tt := range tests {
@@ -150,7 +131,6 @@ func TestInt64(t *testing.T) {
 		{"10.5", nil, false},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
@@ -172,7 +152,6 @@ func TestFloat64(t *testing.T) {
 		{"10.5", float64(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
@@ -194,7 +173,6 @@ func TestFloat32(t *testing.T) {
 		{"10.5", float32(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
@@ -219,7 +197,6 @@ func TestBool(t *testing.T) {
 		{" true ", true, true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
@@ -240,7 +217,6 @@ func TestDecimal(t *testing.T) {
 		{"10.5", decimal.NewFromFloat(10.5), true},
 		{" 7.7 ", decimal.NewFromFloat(7.7), true},
 		{nil, nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 		{"abc", nil, false},
 	}
 
@@ -271,7 +247,6 @@ func TestRecordSlice(t *testing.T) {
 			expected: nil,
 			success:  false,
 		},
-		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{[]int32{1, 2, 3}, nil, false},
 		{[]any{"1", "2", "3"}, nil, false},
@@ -296,7 +271,6 @@ func TestInt32Slice(t *testing.T) {
 		{[]int32{1, 2, 3}, []int32{1, 2, 3}, true},
 		{[]any{"1", "2", "3"}, []int32{1, 2, 3}, true},
 		{[]any{"1", 2, "3"}, []int32{1, 2, 3}, true},
-		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 		{42, nil, false},
@@ -317,7 +291,6 @@ func TestStringSlice(t *testing.T) {
 	}{
 		{[]string{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
 		{[]any{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
-		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 	}
@@ -344,7 +317,6 @@ func TestTextField(t *testing.T) {
 		{value: "a\u200Ba", expected: "a a", success: true, msg: "replace non-normal spaces"},
 		{value: "a\ta", expected: "a a", success: true, msg: "replace control character"},
 		{value: "a\r\n", expected: "a", success: true, msg: "trim happens after replaced control character"},
-		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 	}
 
@@ -369,7 +341,6 @@ func TestNilifyEmpty(t *testing.T) {
 		{[]int{1}, []int{1}},
 		{map[string]any{}, nil},
 		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue},
 		{nil, nil},
 	}
 
@@ -395,7 +366,6 @@ func TestMinLen(t *testing.T) {
 		{[]int{}, nil, 1, regexp.MustCompile(`short`)},
 		{map[string]any{}, nil, 1, regexp.MustCompile(`short`)},
 		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}, 1, nil},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, 1, nil},
 		{nil, nil, 1, nil},
 	}
 
@@ -426,7 +396,6 @@ func TestMaxLen(t *testing.T) {
 		{[]int{1, 2, 3, 4}, nil, 3, regexp.MustCompile(`long`)},
 		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}, 2, nil},
 		{map[string]any{"foo": "bar", "baz": "quz"}, nil, 1, regexp.MustCompile(`long`)},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, 1, nil},
 		{nil, nil, 1, nil},
 	}
 
@@ -452,7 +421,6 @@ func TestRequireStringInclusion(t *testing.T) {
 		{"baz", "baz", true},
 		{"", nil, false},
 		{1, nil, false},
-		{softstruct.UndefinedValue, nil, false},
 		{nil, nil, false},
 	}
 
@@ -475,7 +443,6 @@ func TestLessThan(t *testing.T) {
 		{10, nil, 10, regexp.MustCompile(`too large`)},
 		{32.5, nil, 10, regexp.MustCompile(`too large`)},
 		{"11", nil, 10, regexp.MustCompile(`too large`)},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
 		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
@@ -503,7 +470,6 @@ func TestLessThanOrEqual(t *testing.T) {
 		{10, 10, 10, nil},
 		{32.5, nil, 10, regexp.MustCompile(`too large`)},
 		{"11", nil, 10, regexp.MustCompile(`too large`)},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
 		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
@@ -531,7 +497,6 @@ func TestGreaterThan(t *testing.T) {
 		{10, nil, 10, regexp.MustCompile(`too small`)},
 		{32.5, 32.5, 10, nil},
 		{"11", "11", 10, nil},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
 		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
@@ -559,7 +524,6 @@ func TestGreaterThanOrEqual(t *testing.T) {
 		{10, 10, 10, nil},
 		{32.5, 32.5, 10, nil},
 		{"11", "11", 10, nil},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
 		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
