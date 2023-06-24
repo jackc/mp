@@ -485,10 +485,11 @@ func convertString(value any) string {
 		return string(value)
 	}
 
-	return fmt.Sprintf("%v", value)
+	return fmt.Sprint(value)
 }
 
-// String returns a ValueConverter that converts value to a string. nil is returned unmodified.
+// String returns a ValueConverter that converts value to a string. If value is nil then nil is returned. It does not
+// perform any normalization. In almost all cases, SingleLineString or MultiLineString should be used instead.
 func String() ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
@@ -656,6 +657,35 @@ func SingleLineString() ValueConverter {
 				}
 			}, s)
 			s = strings.TrimSpace(s)
+
+			return s, nil
+		}
+
+		return nil, errors.New("not a string")
+	})
+}
+
+// MultiLineString returns a ValueConverter that converts a string value to a normalized string. If value is nil then nil is
+// returned. If value is not a string then an error is returned.
+//
+// It performs the following operations:
+//   - Remove any invalid UTF-8
+//   - Replace characters that are not graphic or space with standard space
+func MultiLineString() ValueConverter {
+	return ValueConverterFunc(func(value any) (any, error) {
+		if value == nil {
+			return nil, nil
+		}
+
+		if s, ok := value.(string); ok {
+			s = strings.ToValidUTF8(s, "")
+			s = strings.Map(func(r rune) rune {
+				if unicode.IsGraphic(r) || unicode.IsSpace(r) {
+					return r
+				} else {
+					return ' '
+				}
+			}, s)
 
 			return s, nil
 		}
