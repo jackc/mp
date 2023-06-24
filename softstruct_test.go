@@ -490,23 +490,31 @@ func TestLessThan(t *testing.T) {
 	}
 }
 
-func TestRequireDecimalLessThanOrEqual(t *testing.T) {
+func TestLessThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    any
-		expected any
-		limit    decimal.Decimal
-		success  bool
+		value      any
+		expected   any
+		limit      any
+		errMatcher *regexp.Regexp
 	}{
-		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), true},
-		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
-		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
-		{nil, nil, decimal.NewFromInt(10), false},
+		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), nil},
+		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), nil},
+		{decimal.NewFromInt(11), nil, decimal.NewFromInt(10), regexp.MustCompile(`too large`)},
+		{10, 10, 10, nil},
+		{32.5, nil, 10, regexp.MustCompile(`too large`)},
+		{"11", nil, 10, regexp.MustCompile(`too large`)},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
+		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireDecimalLessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.LessThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		if tt.errMatcher == nil {
+			assert.NoError(t, err, "%d", i)
+		} else {
+			assert.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
 	}
 }
 
@@ -545,26 +553,6 @@ func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
 
 	for i, tt := range tests {
 		value, err := softstruct.RequireDecimalGreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
-		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
-	}
-}
-
-func TestRequireInt64LessThanOrEqual(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected any
-		limit    int64
-		success  bool
-	}{
-		{int64(1), int64(1), 10, true},
-		{int64(10), int64(10), 10, true},
-		{softstruct.UndefinedValue, nil, 10, false},
-		{nil, nil, 10, false},
-	}
-
-	for i, tt := range tests {
-		value, err := softstruct.RequireInt64LessThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
