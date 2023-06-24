@@ -588,22 +588,11 @@ func NotNil() ValueConverter {
 	})
 }
 
-// Required returns a ValueConverter that fails if value is nil or empty. Empty is defined by the same rules as
-// NilifyEmpty.
+// Require returns a ValueConverter that returns an error if value is nil or "".
 func Require() ValueConverter {
-	valueConverters := []ValueConverter{
-		NilifyEmpty(),
-		NotNil(),
-	}
-
 	return ValueConverterFunc(func(value any) (any, error) {
-		v := value
-		for _, vc := range valueConverters {
-			var err error
-			v, err = vc.ConvertValue(v)
-			if err != nil {
-				return nil, err
-			}
+		if value == nil || value == "" {
+			return nil, fmt.Errorf("cannot be nil or empty")
 		}
 
 		return value, nil
