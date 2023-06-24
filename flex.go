@@ -1,4 +1,4 @@
-package flex
+package softstruct
 
 import (
 	"encoding/json"

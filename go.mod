@@ -1,4 +1,4 @@
-module github.com/jackc/flex
+module github.com/jackc/softstruct
 
 go 1.13
 

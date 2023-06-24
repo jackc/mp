@@ -1,16 +1,16 @@
-package flex_test
+package softstruct_test
 
 import (
 	"testing"
 
-	"github.com/jackc/flex"
+	"github.com/jackc/softstruct"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestType(t *testing.T) {
-	ft := flex.Type{}
+	ft := softstruct.Type{}
 	ft.Field("name")
 
 	record := ft.New(map[string]interface{}{"name": "Adam"})
@@ -20,23 +20,23 @@ func TestType(t *testing.T) {
 }
 
 func TestTypeNewError(t *testing.T) {
-	ft := flex.Type{}
-	ft.Field("age", flex.Int64())
+	ft := softstruct.Type{}
+	ft.Field("age", softstruct.Int64())
 
 	record := ft.New(map[string]interface{}{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
 func TestTypeNewRequiredError(t *testing.T) {
-	ft := flex.Type{}
-	ft.Field("name", flex.Require())
+	ft := softstruct.Type{}
+	ft.Field("name", softstruct.Require())
 
 	record := ft.New(map[string]interface{}{"misspelled": "adam"})
 	require.Error(t, record.Errors())
 }
 
 func TestRecordAttrs(t *testing.T) {
-	ft := flex.Type{}
+	ft := softstruct.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -47,14 +47,14 @@ func TestRecordAttrs(t *testing.T) {
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := flex.Type{}
+	ft := softstruct.Type{}
 	ft.Field("a")
 	record := ft.New(map[string]interface{}{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
 func TestRecordPick(t *testing.T) {
-	ft := flex.Type{}
+	ft := softstruct.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -70,7 +70,7 @@ func TestRecordPick(t *testing.T) {
 }
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := flex.Type{}
+	ft := softstruct.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -89,11 +89,11 @@ func TestRequiredDefined(t *testing.T) {
 	}{
 		{"foo", "foo", true},
 		{nil, nil, true},
-		{flex.UndefinedValue, nil, false},
+		{softstruct.UndefinedValue, nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireDefined().ConvertValue(tt.value)
+		value, err := softstruct.RequireDefined().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -110,7 +110,7 @@ func TestRequiredNotNil(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireNotNil().ConvertValue(tt.value)
+		value, err := softstruct.RequireNotNil().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -125,11 +125,11 @@ func TestRequire(t *testing.T) {
 		{"foo", "foo", true},
 		{"", nil, false},
 		{nil, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{softstruct.UndefinedValue, nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Require().ConvertValue(tt.value)
+		value, err := softstruct.Require().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -149,11 +149,11 @@ func TestInt64(t *testing.T) {
 		{"10.5", nil, false},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Int64().ConvertValue(tt.value)
+		value, err := softstruct.Int64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -171,11 +171,11 @@ func TestFloat64(t *testing.T) {
 		{"10.5", float64(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Float64().ConvertValue(tt.value)
+		value, err := softstruct.Float64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -193,11 +193,11 @@ func TestFloat32(t *testing.T) {
 		{"10.5", float32(10.5), true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Float32().ConvertValue(tt.value)
+		value, err := softstruct.Float32().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -218,11 +218,11 @@ func TestBool(t *testing.T) {
 		{" true ", true, true},
 		{"abc", nil, false},
 		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Bool().ConvertValue(tt.value)
+		value, err := softstruct.Bool().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -239,20 +239,20 @@ func TestDecimal(t *testing.T) {
 		{"10.5", decimal.NewFromFloat(10.5), true},
 		{" 7.7 ", decimal.NewFromFloat(7.7), true},
 		{nil, nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 		{"abc", nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Decimal().ConvertValue(tt.value)
+		value, err := softstruct.Decimal().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
 func TestRecordSlice(t *testing.T) {
-	flexType := flex.NewType(func(tb flex.TypeBuilder) {
-		tb.Field("n", flex.Int32(), flex.Require())
+	softstructType := softstruct.NewType(func(tb softstruct.TypeBuilder) {
+		tb.Field("n", softstruct.Int32(), softstruct.Require())
 	})
 
 	tests := []struct {
@@ -262,7 +262,7 @@ func TestRecordSlice(t *testing.T) {
 	}{
 		{
 			value:    []interface{}{map[string]interface{}{"n": 1}, map[string]interface{}{"n": 2}},
-			expected: []*flex.Record{flexType.New(map[string]interface{}{"n": 1}), flexType.New(map[string]interface{}{"n": 2})},
+			expected: []*softstruct.Record{softstructType.New(map[string]interface{}{"n": 1}), softstructType.New(map[string]interface{}{"n": 2})},
 			success:  true,
 		},
 		{
@@ -270,7 +270,7 @@ func TestRecordSlice(t *testing.T) {
 			expected: nil,
 			success:  false,
 		},
-		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{[]int32{1, 2, 3}, nil, false},
 		{[]interface{}{"1", "2", "3"}, nil, false},
@@ -280,7 +280,7 @@ func TestRecordSlice(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RecordSlice(flexType).ConvertValue(tt.value)
+		value, err := softstruct.RecordSlice(softstructType).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -295,14 +295,14 @@ func TestInt32Slice(t *testing.T) {
 		{[]int32{1, 2, 3}, []int32{1, 2, 3}, true},
 		{[]interface{}{"1", "2", "3"}, []int32{1, 2, 3}, true},
 		{[]interface{}{"1", 2, "3"}, []int32{1, 2, 3}, true},
-		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 		{42, nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.Int32Slice().ConvertValue(tt.value)
+		value, err := softstruct.Int32Slice().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -316,13 +316,13 @@ func TestStringSlice(t *testing.T) {
 	}{
 		{[]string{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
 		{[]interface{}{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
-		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.StringSlice().ConvertValue(tt.value)
+		value, err := softstruct.StringSlice().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -343,12 +343,12 @@ func TestTextField(t *testing.T) {
 		{value: "a\u200Ba", expected: "a a", success: true, msg: "replace non-normal spaces"},
 		{value: "a\ta", expected: "a a", success: true, msg: "replace control character"},
 		{value: "a\r\n", expected: "a", success: true, msg: "trim happens after replaced control character"},
-		{value: flex.UndefinedValue, expected: flex.UndefinedValue, success: true},
+		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.TextField().ConvertValue(tt.value)
+		value, err := softstruct.TextField().ConvertValue(tt.value)
 		assert.Equalf(t, tt.success, err == nil, "%d: %s", i, tt.msg)
 		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
 	}
@@ -362,12 +362,12 @@ func TestNilifyEmptyString(t *testing.T) {
 	}{
 		{"foo", "foo", true},
 		{"", nil, true},
-		{flex.UndefinedValue, flex.UndefinedValue, true},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
 		{nil, nil, true},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.NilifyEmptyString().ConvertValue(tt.value)
+		value, err := softstruct.NilifyEmptyString().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -384,12 +384,12 @@ func TestRequireStringMinLength(t *testing.T) {
 		{"f", "f", 1, true},
 		{"", nil, 1, false},
 		{1, nil, 1, false},
-		{flex.UndefinedValue, nil, 1, false},
+		{softstruct.UndefinedValue, nil, 1, false},
 		{nil, nil, 1, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireStringMinLength(tt.length).ConvertValue(tt.value)
+		value, err := softstruct.RequireStringMinLength(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -406,12 +406,12 @@ func TestRequireStringMaxLength(t *testing.T) {
 		{"foo", "foo", 3, true},
 		{"", "", 1, true},
 		{1, nil, 1, false},
-		{flex.UndefinedValue, nil, 1, false},
+		{softstruct.UndefinedValue, nil, 1, false},
 		{nil, nil, 1, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireStringMaxLength(tt.length).ConvertValue(tt.value)
+		value, err := softstruct.RequireStringMaxLength(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -428,12 +428,12 @@ func TestRequireStringInclusion(t *testing.T) {
 		{"baz", "baz", true},
 		{"", nil, false},
 		{1, nil, false},
-		{flex.UndefinedValue, nil, false},
+		{softstruct.UndefinedValue, nil, false},
 		{nil, nil, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireStringInclusion([]string{"foo", "baz", "abc"}).ConvertValue(tt.value)
+		value, err := softstruct.RequireStringInclusion([]string{"foo", "baz", "abc"}).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -448,12 +448,12 @@ func TestRequireDecimalLessThan(t *testing.T) {
 	}{
 		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), true},
 		{decimal.NewFromInt(10), nil, decimal.NewFromInt(10), false},
-		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
 		{nil, nil, decimal.NewFromInt(10), false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireDecimalLessThan(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireDecimalLessThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -468,12 +468,12 @@ func TestRequireDecimalLessThanOrEqual(t *testing.T) {
 	}{
 		{decimal.NewFromInt(1), decimal.NewFromInt(1), decimal.NewFromInt(10), true},
 		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
-		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
 		{nil, nil, decimal.NewFromInt(10), false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireDecimalLessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireDecimalLessThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -488,12 +488,12 @@ func TestRequireDecimalGreaterThan(t *testing.T) {
 	}{
 		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), true},
 		{decimal.NewFromInt(10), nil, decimal.NewFromInt(10), false},
-		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
 		{nil, nil, decimal.NewFromInt(10), false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireDecimalGreaterThan(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireDecimalGreaterThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -508,12 +508,12 @@ func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
 	}{
 		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), true},
 		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
-		{flex.UndefinedValue, nil, decimal.NewFromInt(10), false},
+		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
 		{nil, nil, decimal.NewFromInt(10), false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireDecimalGreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireDecimalGreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -528,12 +528,12 @@ func TestRequireInt64LessThan(t *testing.T) {
 	}{
 		{int64(1), int64(1), 10, true},
 		{int64(10), nil, 10, false},
-		{flex.UndefinedValue, nil, 10, false},
+		{softstruct.UndefinedValue, nil, 10, false},
 		{nil, nil, 10, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireInt64LessThan(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireInt64LessThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -548,12 +548,12 @@ func TestRequireInt64LessThanOrEqual(t *testing.T) {
 	}{
 		{int64(1), int64(1), 10, true},
 		{int64(10), int64(10), 10, true},
-		{flex.UndefinedValue, nil, 10, false},
+		{softstruct.UndefinedValue, nil, 10, false},
 		{nil, nil, 10, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireInt64LessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireInt64LessThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -568,12 +568,12 @@ func TestRequireInt64GreaterThan(t *testing.T) {
 	}{
 		{int64(11), int64(11), 10, true},
 		{int64(10), nil, 10, false},
-		{flex.UndefinedValue, nil, 10, false},
+		{softstruct.UndefinedValue, nil, 10, false},
 		{nil, nil, 10, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireInt64GreaterThan(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireInt64GreaterThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -588,12 +588,12 @@ func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
 	}{
 		{int64(11), int64(11), 10, true},
 		{int64(10), int64(10), 10, true},
-		{flex.UndefinedValue, nil, 10, false},
+		{softstruct.UndefinedValue, nil, 10, false},
 		{nil, nil, 10, false},
 	}
 
 	for i, tt := range tests {
-		value, err := flex.RequireInt64GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.RequireInt64GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -601,9 +601,9 @@ func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
 
 func BenchmarkNewTypeAndRecord(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ft := flex.Type{}
-		ft.Field("name", flex.String())
-		ft.Field("age", flex.Int32())
+		ft := softstruct.Type{}
+		ft.Field("name", softstruct.String())
+		ft.Field("age", softstruct.Int32())
 
 		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
@@ -611,9 +611,9 @@ func BenchmarkNewTypeAndRecord(b *testing.B) {
 }
 
 func BenchmarkRecord(b *testing.B) {
-	ft := flex.Type{}
-	ft.Field("name", flex.String())
-	ft.Field("age", flex.Int32())
+	ft := softstruct.Type{}
+	ft.Field("name", softstruct.String())
+	ft.Field("age", softstruct.Int32())
 
 	for i := 0; i < b.N; i++ {
 		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
