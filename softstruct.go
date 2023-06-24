@@ -803,7 +803,7 @@ func tryDecimal(value any) (n decimal.Decimal, ok bool) {
 	return n, true
 }
 
-// LessThan returns a ValueConverter that fails if value >= x. x must be convertable to a decimal number or LessThan
+// LessThan returns a ValueConverter that fails unless value < x. x must be convertable to a decimal number or LessThan
 // panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
 func LessThan(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
@@ -829,8 +829,9 @@ func LessThan(x any) ValueConverter {
 	})
 }
 
-// LessThanOrEqual returns a ValueConverter that fails if value > x. x must be convertable to a decimal number or
-// LessThan panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
+// LessThanOrEqual returns a ValueConverter that fails unless value <= x. x must be convertable to a decimal number or
+// LessThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
+// unmodified.
 func LessThanOrEqual(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -855,8 +856,8 @@ func LessThanOrEqual(x any) ValueConverter {
 	})
 }
 
-// GreaterThan returns a ValueConverter that fails if value <= x. x must be convertable to a decimal number or LessThan
-// panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
+// GreaterThan returns a ValueConverter that fails unless value > x. x must be convertable to a decimal number or
+// GreaterThan panics. value must be convertable to a decimal number. nil and UndefinedValue are returned unmodified.
 func GreaterThan(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
 	if !ok {
@@ -881,8 +882,8 @@ func GreaterThan(x any) ValueConverter {
 	})
 }
 
-// GreaterThanOrEqual returns a ValueConverter that fails if value <= x. x must be convertable to a decimal number or
-// GreaterThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
+// GreaterThanOrEqual returns a ValueConverter that fails unless value >= x. x must be convertable to a decimal number
+// or GreaterThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
 // unmodified.
 func GreaterThanOrEqual(x any) ValueConverter {
 	dx, ok := tryDecimal(x)
