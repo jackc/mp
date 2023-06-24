@@ -47,11 +47,11 @@ func (t *Type) Field(name string, converters ...ValueConverter) {
 	t.fields[name] = &field{name: name, converters: converters}
 }
 
-func (t *Type) New(attrs map[string]interface{}) *Record {
+func (t *Type) New(attrs map[string]any) *Record {
 	r := &Record{
 		t:         t,
 		original:  attrs,
-		converted: make(map[string]interface{}, len(attrs)),
+		converted: make(map[string]any, len(attrs)),
 		errors:    make(map[string]error, len(attrs)),
 	}
 
@@ -82,12 +82,12 @@ func (t *Type) New(attrs map[string]interface{}) *Record {
 }
 
 type ValueConverter interface {
-	ConvertValue(interface{}) (interface{}, error)
+	ConvertValue(any) (any, error)
 }
 
-type ValueConverterFunc func(interface{}) (interface{}, error)
+type ValueConverterFunc func(any) (any, error)
 
-func (vcf ValueConverterFunc) ConvertValue(v interface{}) (interface{}, error) {
+func (vcf ValueConverterFunc) ConvertValue(v any) (any, error) {
 	return vcf(v)
 }
 
@@ -113,9 +113,9 @@ func (e Errors) MarshalJSON() ([]byte, error) {
 		return []byte(`{}`), nil
 	}
 
-	m := make(map[string]interface{}, len(e))
+	m := make(map[string]any, len(e))
 	for attr, err := range e {
-		var val interface{}
+		var val any
 		if jm, ok := err.(json.Marshaler); ok {
 			val = jm
 		} else {
@@ -147,12 +147,12 @@ func (e sliceElementErrors) Error() string {
 
 type Record struct {
 	t         *Type
-	original  map[string]interface{}
-	converted map[string]interface{}
+	original  map[string]any
+	converted map[string]any
 	errors    Errors
 }
 
-func (r *Record) Get(s string) interface{} {
+func (r *Record) Get(s string) any {
 	if _, ok := r.t.fields[s]; !ok {
 		panic(fmt.Errorf("%q is not a field of type", s))
 	}
@@ -168,8 +168,8 @@ func (r *Record) Errors() error {
 	return r.errors
 }
 
-func (r *Record) Pick(keys ...string) map[string]interface{} {
-	m := make(map[string]interface{}, len(keys))
+func (r *Record) Pick(keys ...string) map[string]any {
+	m := make(map[string]any, len(keys))
 	for _, k := range keys {
 		if _, ok := r.t.fields[k]; !ok {
 			panic(fmt.Errorf("%q is not a field of type", k))
@@ -182,11 +182,11 @@ func (r *Record) Pick(keys ...string) map[string]interface{} {
 	return m
 }
 
-func (r *Record) Attrs() map[string]interface{} {
+func (r *Record) Attrs() map[string]any {
 	return r.converted
 }
 
-func convertInt64(value interface{}) (int64, error) {
+func convertInt64(value any) (int64, error) {
 	switch value := value.(type) {
 	case int8:
 		return int64(value), nil
@@ -256,7 +256,7 @@ func convertInt64(value interface{}) (int64, error) {
 
 // Int64 returns a ValueConverter that converts to an int64. Nil and UndefinedValue are returned unmodified.
 func Int64() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -270,7 +270,7 @@ func Int64() ValueConverter {
 	})
 }
 
-func convertInt32(value interface{}) (int32, error) {
+func convertInt32(value any) (int32, error) {
 	n, err := convertInt64(value)
 	if err != nil {
 		return 0, err
@@ -288,7 +288,7 @@ func convertInt32(value interface{}) (int32, error) {
 
 // Int32 returns a ValueConverter that converts to an int32. Nil and UndefinedValue are returned unmodified.
 func Int32() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -302,7 +302,7 @@ func Int32() ValueConverter {
 	})
 }
 
-func convertFloat64(value interface{}) (float64, error) {
+func convertFloat64(value any) (float64, error) {
 	switch value := value.(type) {
 	case int8:
 		return float64(value), nil
@@ -342,7 +342,7 @@ func convertFloat64(value interface{}) (float64, error) {
 
 // Float64 returns a ValueConverter that converts to an float64. Nil and UndefinedValue are returned unmodified.
 func Float64() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -356,7 +356,7 @@ func Float64() ValueConverter {
 	})
 }
 
-func convertFloat32(value interface{}) (float32, error) {
+func convertFloat32(value any) (float32, error) {
 	n, err := convertFloat64(value)
 	if err != nil {
 		return 0, err
@@ -374,7 +374,7 @@ func convertFloat32(value interface{}) (float32, error) {
 
 // Float32 returns a ValueConverter that converts to an float32. Nil and UndefinedValue are returned unmodified.
 func Float32() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -389,7 +389,7 @@ func Float32() ValueConverter {
 }
 
 func Bool() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -411,7 +411,7 @@ func Bool() ValueConverter {
 }
 
 func UUID() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -430,7 +430,7 @@ func UUID() ValueConverter {
 	})
 }
 
-func convertDecimal(value interface{}) (decimal.Decimal, error) {
+func convertDecimal(value any) (decimal.Decimal, error) {
 	switch value := value.(type) {
 	case decimal.Decimal:
 		return value, nil
@@ -455,7 +455,7 @@ func convertDecimal(value interface{}) (decimal.Decimal, error) {
 }
 
 func Decimal() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -469,7 +469,7 @@ func Decimal() ValueConverter {
 	})
 }
 
-func convertString(value interface{}) string {
+func convertString(value any) string {
 	switch value := value.(type) {
 	case string:
 		return value
@@ -482,7 +482,7 @@ func convertString(value interface{}) string {
 
 // String returns a ValueConverter that converts to a string. Nil and UndefinedValue are returned unmodified.
 func String() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -492,16 +492,16 @@ func String() ValueConverter {
 }
 
 func RecordSlice(t *Type) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
 
-		if value, ok := value.([]interface{}); ok {
+		if value, ok := value.([]any); ok {
 			var elErrs sliceElementErrors
 			rs := make([]*Record, len(value))
 			for i := range value {
-				if r, ok := value[i].(map[string]interface{}); ok {
+				if r, ok := value[i].(map[string]any); ok {
 					rs[i] = t.New(r)
 					if rs[i].Errors() != nil {
 						elErrs = append(elErrs, sliceElementError{Index: i, Err: rs[i].Errors()})
@@ -523,7 +523,7 @@ func RecordSlice(t *Type) ValueConverter {
 }
 
 func StringSlice() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -531,7 +531,7 @@ func StringSlice() ValueConverter {
 		switch value := value.(type) {
 		case []string:
 			return value, nil
-		case []interface{}:
+		case []any:
 			ss := make([]string, len(value))
 			for i := range value {
 				ss[i] = convertString(value[i])
@@ -544,7 +544,7 @@ func StringSlice() ValueConverter {
 }
 
 func Int32Slice() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -554,7 +554,7 @@ func Int32Slice() ValueConverter {
 		switch value := value.(type) {
 		case []int32:
 			return value, nil
-		case []interface{}:
+		case []any:
 			ns := make([]int32, len(value))
 			for i := range value {
 				ns[i], err = convertInt32(value[i])
@@ -570,7 +570,7 @@ func Int32Slice() ValueConverter {
 }
 
 func RequireDefined() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == UndefinedValue {
 			return nil, errors.New("must be defined")
 		}
@@ -579,7 +579,7 @@ func RequireDefined() ValueConverter {
 }
 
 func RequireNotNil() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
 			return nil, errors.New("cannot be nil")
 		}
@@ -588,7 +588,7 @@ func RequireNotNil() ValueConverter {
 }
 
 func Require() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		valueConverters := []ValueConverter{
 			RequireDefined(),
 			RequireNotNil(),
@@ -609,7 +609,7 @@ func Require() ValueConverter {
 	})
 }
 
-func convertSlice(value interface{}, converters []ValueConverter) (interface{}, error) {
+func convertSlice(value any, converters []ValueConverter) (any, error) {
 	v := value
 	var err error
 
@@ -624,7 +624,7 @@ func convertSlice(value interface{}, converters []ValueConverter) (interface{}, 
 }
 
 func IfDefined(converters ...ValueConverter) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == UndefinedValue {
 			return value, nil
 		}
@@ -634,7 +634,7 @@ func IfDefined(converters ...ValueConverter) ValueConverter {
 }
 
 func IfNotNil(converters ...ValueConverter) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
 			return value, nil
 		}
@@ -651,7 +651,7 @@ func IfNotNil(converters ...ValueConverter) ValueConverter {
 // Replace non-printable characters with standard space
 // Remove spaces from left and right
 func TextField() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil || value == UndefinedValue {
 			return value, nil
 		}
@@ -679,7 +679,7 @@ func normalizeOneLineString(s string) string {
 
 // NilifyEmpty converts strings, slices, and maps where len(value) == 0 to nil. Any other value not modified.
 func NilifyEmpty() ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		n, ok := tryLen(value)
 		if ok && n == 0 {
 			return nil, nil
@@ -689,7 +689,7 @@ func NilifyEmpty() ValueConverter {
 }
 
 func requireStringTest(test func(string) bool, failErr error) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		s, ok := value.(string)
 		if !ok {
 			return nil, errors.New("not a string")
@@ -775,7 +775,7 @@ func RequireStringInclusion(options []string) ValueConverter {
 }
 
 func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		n, ok := value.(decimal.Decimal)
 		if !ok {
 			return nil, errors.New("not a decimal")
@@ -806,7 +806,7 @@ func RequireDecimalGreaterThanOrEqual(x decimal.Decimal) ValueConverter {
 }
 
 func requireInt64Test(test func(int64) bool, failErr error) ValueConverter {
-	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
+	return ValueConverterFunc(func(value any) (any, error) {
 		n, ok := value.(int64)
 		if !ok {
 			return nil, errors.New("not a int64")
