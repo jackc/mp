@@ -13,7 +13,7 @@ func TestType(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("name")
 
-	record := ft.New(map[string]interface{}{"name": "Adam"})
+	record := ft.New(map[string]any{"name": "Adam"})
 	require.NoError(t, record.Errors())
 
 	assert.Equal(t, "Adam", record.Get("name"))
@@ -23,7 +23,7 @@ func TestTypeNewError(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("age", softstruct.Int64())
 
-	record := ft.New(map[string]interface{}{"age": "abc"})
+	record := ft.New(map[string]any{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
@@ -31,7 +31,7 @@ func TestTypeNewRequiredError(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("name", softstruct.Require())
 
-	record := ft.New(map[string]interface{}{"misspelled": "adam"})
+	record := ft.New(map[string]any{"misspelled": "adam"})
 	require.Error(t, record.Errors())
 }
 
@@ -42,14 +42,14 @@ func TestRecordAttrs(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
-	assert.Equal(t, map[string]interface{}{"a": "1", "b": "2", "c": "3"}, record.Attrs())
+	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
+	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3"}, record.Attrs())
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("a")
-	record := ft.New(map[string]interface{}{"b": "2"})
+	record := ft.New(map[string]any{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
@@ -60,13 +60,13 @@ func TestRecordPick(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
+	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
 
 	attrs := record.Pick("a", "b")
-	assert.Equal(t, map[string]interface{}{"a": "1", "b": "2"}, attrs)
+	assert.Equal(t, map[string]any{"a": "1", "b": "2"}, attrs)
 
 	attrs = record.Pick("c", "d")
-	assert.Equal(t, map[string]interface{}{"c": "3"}, attrs)
+	assert.Equal(t, map[string]any{"c": "3"}, attrs)
 }
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
@@ -76,15 +76,15 @@ func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]interface{}{"a": "1", "b": "2", "c": "3"})
+	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
 
 	assert.PanicsWithError(t, `"z" is not a field of type`, func() { record.Pick("a", "b", "z") })
 }
 
 func TestRequiredDefined(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{"foo", "foo", true},
@@ -101,8 +101,8 @@ func TestRequiredDefined(t *testing.T) {
 
 func TestRequiredNotNil(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{"foo", "foo", true},
@@ -118,8 +118,8 @@ func TestRequiredNotNil(t *testing.T) {
 
 func TestRequire(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{"foo", "foo", true},
@@ -137,8 +137,8 @@ func TestRequire(t *testing.T) {
 
 func TestInt64(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{1, int64(1), true},
@@ -161,8 +161,8 @@ func TestInt64(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{1, float64(1), true},
@@ -183,8 +183,8 @@ func TestFloat64(t *testing.T) {
 
 func TestFloat32(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{1, float32(1), true},
@@ -205,8 +205,8 @@ func TestFloat32(t *testing.T) {
 
 func TestBool(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{true, true, true},
@@ -230,8 +230,8 @@ func TestBool(t *testing.T) {
 
 func TestDecimal(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{decimal.NewFromInt(1), decimal.NewFromInt(1), true},
@@ -256,25 +256,25 @@ func TestRecordSlice(t *testing.T) {
 	})
 
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{
-			value:    []interface{}{map[string]interface{}{"n": 1}, map[string]interface{}{"n": 2}},
-			expected: []*softstruct.Record{softstructType.New(map[string]interface{}{"n": 1}), softstructType.New(map[string]interface{}{"n": 2})},
+			value:    []any{map[string]any{"n": 1}, map[string]any{"n": 2}},
+			expected: []*softstruct.Record{softstructType.New(map[string]any{"n": 1}), softstructType.New(map[string]any{"n": 2})},
 			success:  true,
 		},
 		{
-			value:    []interface{}{map[string]interface{}{"n": 1}, map[string]interface{}{"n": "abc"}},
+			value:    []any{map[string]any{"n": 1}, map[string]any{"n": "abc"}},
 			expected: nil,
 			success:  false,
 		},
 		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{[]int32{1, 2, 3}, nil, false},
-		{[]interface{}{"1", "2", "3"}, nil, false},
-		{[]interface{}{"1", 2, "3"}, nil, false},
+		{[]any{"1", "2", "3"}, nil, false},
+		{[]any{"1", 2, "3"}, nil, false},
 		{"abc", nil, false},
 		{42, nil, false},
 	}
@@ -288,13 +288,13 @@ func TestRecordSlice(t *testing.T) {
 
 func TestInt32Slice(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{[]int32{1, 2, 3}, []int32{1, 2, 3}, true},
-		{[]interface{}{"1", "2", "3"}, []int32{1, 2, 3}, true},
-		{[]interface{}{"1", 2, "3"}, []int32{1, 2, 3}, true},
+		{[]any{"1", "2", "3"}, []int32{1, 2, 3}, true},
+		{[]any{"1", 2, "3"}, []int32{1, 2, 3}, true},
 		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
@@ -310,12 +310,12 @@ func TestInt32Slice(t *testing.T) {
 
 func TestStringSlice(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{[]string{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
-		{[]interface{}{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
+		{[]any{"foo", "bar", "baz"}, []string{"foo", "bar", "baz"}, true},
 		{value: softstruct.UndefinedValue, expected: softstruct.UndefinedValue, success: true},
 		{value: nil, expected: nil, success: true},
 		{"abc", nil, false},
@@ -330,8 +330,8 @@ func TestStringSlice(t *testing.T) {
 
 func TestTextField(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 		msg      string
 	}{
@@ -356,8 +356,8 @@ func TestTextField(t *testing.T) {
 
 func TestNilifyEmptyString(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{"foo", "foo", true},
@@ -375,8 +375,8 @@ func TestNilifyEmptyString(t *testing.T) {
 
 func TestRequireStringMinLength(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		length   int
 		success  bool
 	}{
@@ -397,8 +397,8 @@ func TestRequireStringMinLength(t *testing.T) {
 
 func TestRequireStringMaxLength(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		length   int
 		success  bool
 	}{
@@ -419,8 +419,8 @@ func TestRequireStringMaxLength(t *testing.T) {
 
 func TestRequireStringInclusion(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		success  bool
 	}{
 		{"foo", "foo", true},
@@ -441,8 +441,8 @@ func TestRequireStringInclusion(t *testing.T) {
 
 func TestRequireDecimalLessThan(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    decimal.Decimal
 		success  bool
 	}{
@@ -461,8 +461,8 @@ func TestRequireDecimalLessThan(t *testing.T) {
 
 func TestRequireDecimalLessThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    decimal.Decimal
 		success  bool
 	}{
@@ -481,8 +481,8 @@ func TestRequireDecimalLessThanOrEqual(t *testing.T) {
 
 func TestRequireDecimalGreaterThan(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    decimal.Decimal
 		success  bool
 	}{
@@ -501,8 +501,8 @@ func TestRequireDecimalGreaterThan(t *testing.T) {
 
 func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    decimal.Decimal
 		success  bool
 	}{
@@ -521,8 +521,8 @@ func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
 
 func TestRequireInt64LessThan(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    int64
 		success  bool
 	}{
@@ -541,8 +541,8 @@ func TestRequireInt64LessThan(t *testing.T) {
 
 func TestRequireInt64LessThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    int64
 		success  bool
 	}{
@@ -561,8 +561,8 @@ func TestRequireInt64LessThanOrEqual(t *testing.T) {
 
 func TestRequireInt64GreaterThan(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    int64
 		success  bool
 	}{
@@ -581,8 +581,8 @@ func TestRequireInt64GreaterThan(t *testing.T) {
 
 func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    interface{}
-		expected interface{}
+		value    any
+		expected any
 		limit    int64
 		success  bool
 	}{
@@ -605,7 +605,7 @@ func BenchmarkNewTypeAndRecord(b *testing.B) {
 		ft.Field("name", softstruct.String())
 		ft.Field("age", softstruct.Int32())
 
-		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
+		record := ft.New(map[string]any{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
 	}
 }
@@ -616,7 +616,7 @@ func BenchmarkRecord(b *testing.B) {
 	ft.Field("age", softstruct.Int32())
 
 	for i := 0; i < b.N; i++ {
-		record := ft.New(map[string]interface{}{"name": "Adam", "age": 30})
+		record := ft.New(map[string]any{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
 	}
 }
