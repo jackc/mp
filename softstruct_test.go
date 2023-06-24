@@ -272,7 +272,7 @@ func TestRecordSlice(t *testing.T) {
 	}
 }
 
-func TestInt32Slice(t *testing.T) {
+func TestSliceInt32(t *testing.T) {
 	tests := []struct {
 		value    any
 		expected any
@@ -287,13 +287,13 @@ func TestInt32Slice(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Int32Slice().ConvertValue(tt.value)
+		value, err := softstruct.Slice[int32](softstruct.Int32()).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
-func TestStringSlice(t *testing.T) {
+func TestSliceString(t *testing.T) {
 	tests := []struct {
 		value    any
 		expected any
@@ -306,7 +306,7 @@ func TestStringSlice(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.StringSlice().ConvertValue(tt.value)
+		value, err := softstruct.Slice[string](softstruct.SingleLineString()).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}

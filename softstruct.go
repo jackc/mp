@@ -531,50 +531,38 @@ func RecordSlice(t *Type) ValueConverter {
 	})
 }
 
-func StringSlice() ValueConverter {
+func Slice[T any](elementConverter ValueConverter) ValueConverter {
 	return ValueConverterFunc(func(value any) (any, error) {
 		if value == nil {
 			return nil, nil
 		}
 
 		switch value := value.(type) {
-		case []string:
+		case []T:
 			return value, nil
 		case []any:
-			ss := make([]string, len(value))
+			ts := make([]T, len(value))
+			var elErrs sliceElementErrors
 			for i := range value {
-				ss[i] = convertString(value[i])
-			}
-			return ss, nil
-		}
-
-		return nil, errors.New("cannot convert to string slice")
-	})
-}
-
-func Int32Slice() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return nil, nil
-		}
-
-		var err error
-
-		switch value := value.(type) {
-		case []int32:
-			return value, nil
-		case []any:
-			ns := make([]int32, len(value))
-			for i := range value {
-				ns[i], err = convertInt32(value[i])
+				element, err := elementConverter.ConvertValue(value[i])
 				if err != nil {
-					return nil, err
+					elErrs = append(elErrs, sliceElementError{Index: i, Err: err})
+				}
+				if element, ok := element.(T); ok {
+					ts[i] = element
+				} else {
+					elErrs = append(elErrs, sliceElementError{Index: i, Err: err})
 				}
 			}
-			return ns, nil
+
+			if elErrs != nil {
+				return nil, elErrs
+			}
+
+			return ts, nil
 		}
 
-		return nil, errors.New("cannot convert to int32 slice")
+		return nil, fmt.Errorf("cannot convert to slice")
 	})
 }
 
