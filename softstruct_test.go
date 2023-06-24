@@ -546,43 +546,31 @@ func TestGreaterThan(t *testing.T) {
 	}
 }
 
-func TestRequireDecimalGreaterThanOrEqual(t *testing.T) {
+func TestGreaterThanOrEqual(t *testing.T) {
 	tests := []struct {
-		value    any
-		expected any
-		limit    decimal.Decimal
-		success  bool
+		value      any
+		expected   any
+		limit      any
+		errMatcher *regexp.Regexp
 	}{
-		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), true},
-		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), true},
-		{softstruct.UndefinedValue, nil, decimal.NewFromInt(10), false},
-		{nil, nil, decimal.NewFromInt(10), false},
+		{decimal.NewFromInt(1), nil, decimal.NewFromInt(10), regexp.MustCompile(`too small`)},
+		{decimal.NewFromInt(10), decimal.NewFromInt(10), decimal.NewFromInt(10), nil},
+		{decimal.NewFromInt(11), decimal.NewFromInt(11), decimal.NewFromInt(10), nil},
+		{10, 10, 10, nil},
+		{32.5, 32.5, 10, nil},
+		{"11", "11", 10, nil},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue, decimal.NewFromInt(10), nil},
+		{nil, nil, decimal.NewFromInt(10), nil},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.RequireDecimalGreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := softstruct.GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
-	}
-}
-
-func TestRequireInt64GreaterThanOrEqual(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected any
-		limit    int64
-		success  bool
-	}{
-		{int64(11), int64(11), 10, true},
-		{int64(10), int64(10), 10, true},
-		{softstruct.UndefinedValue, nil, 10, false},
-		{nil, nil, 10, false},
-	}
-
-	for i, tt := range tests {
-		value, err := softstruct.RequireInt64GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
-		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		if tt.errMatcher == nil {
+			assert.NoError(t, err, "%d", i)
+		} else {
+			assert.Regexpf(t, tt.errMatcher, err.Error(), "%d", i)
+		}
 	}
 }
 

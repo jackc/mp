@@ -881,40 +881,29 @@ func GreaterThan(x any) ValueConverter {
 	})
 }
 
-func requireDecimalTest(test func(decimal.Decimal) bool, failErr error) ValueConverter {
+// GreaterThanOrEqual returns a ValueConverter that fails if value <= x. x must be convertable to a decimal number or
+// GreaterThanOrEqual panics. value must be convertable to a decimal number. nil and UndefinedValue are returned
+// unmodified.
+func GreaterThanOrEqual(x any) ValueConverter {
+	dx, ok := tryDecimal(x)
+	if !ok {
+		panic(fmt.Errorf("%v is not convertable to a decimal number", x))
+	}
+
 	return ValueConverterFunc(func(value any) (any, error) {
-		n, ok := value.(decimal.Decimal)
+		if value == nil || value == UndefinedValue {
+			return value, nil
+		}
+
+		n, ok := tryDecimal(value)
 		if !ok {
-			return nil, errors.New("not a decimal")
+			return nil, fmt.Errorf("not a number")
 		}
 
-		if test(n) {
-			return n, nil
+		if !n.GreaterThanOrEqual(dx) {
+			return nil, fmt.Errorf("too small")
 		}
 
-		return nil, failErr
+		return value, nil
 	})
-}
-
-func RequireDecimalGreaterThanOrEqual(x decimal.Decimal) ValueConverter {
-	return requireDecimalTest(func(n decimal.Decimal) bool { return n.GreaterThanOrEqual(x) }, errors.New("too small"))
-}
-
-func requireInt64Test(test func(int64) bool, failErr error) ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		n, ok := value.(int64)
-		if !ok {
-			return nil, errors.New("not a int64")
-		}
-
-		if test(n) {
-			return n, nil
-		}
-
-		return nil, failErr
-	})
-}
-
-func RequireInt64GreaterThanOrEqual(x int64) ValueConverter {
-	return requireInt64Test(func(n int64) bool { return n >= x }, errors.New("too small"))
 }
