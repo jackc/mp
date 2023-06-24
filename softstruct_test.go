@@ -355,22 +355,28 @@ func TestTextField(t *testing.T) {
 	}
 }
 
-func TestNilifyEmptyString(t *testing.T) {
+func TestNilifyEmpty(t *testing.T) {
+	type otherString string
+
 	tests := []struct {
 		value    any
 		expected any
-		success  bool
 	}{
-		{"foo", "foo", true},
-		{"", nil, true},
-		{softstruct.UndefinedValue, softstruct.UndefinedValue, true},
-		{nil, nil, true},
+		{"foo", "foo"},
+		{"", nil},
+		{otherString(""), nil},
+		{[]int{}, nil},
+		{[]int{1}, []int{1}},
+		{map[string]any{}, nil},
+		{map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}},
+		{softstruct.UndefinedValue, softstruct.UndefinedValue},
+		{nil, nil},
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.NilifyEmptyString().ConvertValue(tt.value)
+		value, err := softstruct.NilifyEmpty().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
-		assert.Equalf(t, tt.success, err == nil, "%d", i)
+		assert.NoErrorf(t, err, "%d", i)
 	}
 }
 

@@ -677,10 +677,11 @@ func normalizeOneLineString(s string) string {
 	return s
 }
 
-// NilifyEmptyString converts the empty string to nil. Any other value not modified.
-func NilifyEmptyString() ValueConverter {
+// NilifyEmpty converts strings, slices, and maps where len(value) == 0 to nil. Any other value not modified.
+func NilifyEmpty() ValueConverter {
 	return ValueConverterFunc(func(value interface{}) (interface{}, error) {
-		if value == "" {
+		n, ok := tryLen(value)
+		if ok && n == 0 {
 			return nil, nil
 		}
 		return value, nil
