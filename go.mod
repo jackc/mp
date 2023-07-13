@@ -1,4 +1,4 @@
-module github.com/jackc/softstruct
+module github.com/jackc/mp
 
 go 1.20
 

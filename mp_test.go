@@ -1,18 +1,18 @@
-package softstruct_test
+package mp_test
 
 import (
 	"regexp"
 	"testing"
 	"time"
 
-	"github.com/jackc/softstruct"
+	"github.com/jackc/mp"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestType(t *testing.T) {
-	ft := softstruct.Type{}
+	ft := mp.Type{}
 	ft.Field("name")
 
 	record := ft.Parse(map[string]any{"name": "Adam"})
@@ -22,23 +22,23 @@ func TestType(t *testing.T) {
 }
 
 func TestTypeNewError(t *testing.T) {
-	ft := softstruct.Type{}
-	ft.Field("age", softstruct.Int64())
+	ft := mp.Type{}
+	ft.Field("age", mp.Int64())
 
 	record := ft.Parse(map[string]any{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
 func TestTypeNewRequiredError(t *testing.T) {
-	ft := softstruct.Type{}
-	ft.Field("name", softstruct.Require())
+	ft := mp.Type{}
+	ft.Field("name", mp.Require())
 
 	record := ft.Parse(map[string]any{"misspelled": "adam"})
 	require.Error(t, record.Errors())
 }
 
 func TestRecordAttrs(t *testing.T) {
-	ft := softstruct.Type{}
+	ft := mp.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -49,14 +49,14 @@ func TestRecordAttrs(t *testing.T) {
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := softstruct.Type{}
+	ft := mp.Type{}
 	ft.Field("a")
 	record := ft.Parse(map[string]any{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
 func TestRecordPick(t *testing.T) {
-	ft := softstruct.Type{}
+	ft := mp.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -72,7 +72,7 @@ func TestRecordPick(t *testing.T) {
 }
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := softstruct.Type{}
+	ft := mp.Type{}
 	ft.Field("a")
 	ft.Field("b")
 	ft.Field("c")
@@ -94,7 +94,7 @@ func TestNotNil(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.NotNil().ConvertValue(tt.value)
+		value, err := mp.NotNil().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -112,7 +112,7 @@ func TestRequire(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Require().ConvertValue(tt.value)
+		value, err := mp.Require().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -137,7 +137,7 @@ func TestInt64(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Int64().ConvertValue(tt.value)
+		value, err := mp.Int64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -160,7 +160,7 @@ func TestFloat64(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Float64().ConvertValue(tt.value)
+		value, err := mp.Float64().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -183,7 +183,7 @@ func TestFloat32(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Float32().ConvertValue(tt.value)
+		value, err := mp.Float32().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -209,7 +209,7 @@ func TestBool(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Bool().ConvertValue(tt.value)
+		value, err := mp.Bool().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -230,7 +230,7 @@ func TestTime(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Time("2006-01-02", "2006-01-02 15:04:05").ConvertValue(tt.value)
+		value, err := mp.Time("2006-01-02", "2006-01-02 15:04:05").ConvertValue(tt.value)
 		if tt.expected == nil {
 			assert.Nilf(t, value, "%d", i)
 		} else {
@@ -260,15 +260,15 @@ func TestDecimal(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Decimal().ConvertValue(tt.value)
+		value, err := mp.Decimal().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
 }
 
 func TestSliceRecord(t *testing.T) {
-	softstructType := softstruct.NewType(func(tb softstruct.TypeBuilder) {
-		tb.Field("n", softstruct.Int32(), softstruct.Require())
+	mpType := mp.NewType(func(tb mp.TypeBuilder) {
+		tb.Field("n", mp.Int32(), mp.Require())
 	})
 
 	tests := []struct {
@@ -278,7 +278,7 @@ func TestSliceRecord(t *testing.T) {
 	}{
 		{
 			value:    []any{map[string]any{"n": 1}, map[string]any{"n": 2}},
-			expected: []*softstruct.Record{softstructType.Parse(map[string]any{"n": 1}), softstructType.Parse(map[string]any{"n": 2})},
+			expected: []*mp.Record{mpType.Parse(map[string]any{"n": 1}), mpType.Parse(map[string]any{"n": 2})},
 			success:  true,
 		},
 		{
@@ -295,7 +295,7 @@ func TestSliceRecord(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Slice[*softstruct.Record](softstructType).ConvertValue(tt.value)
+		value, err := mp.Slice[*mp.Record](mpType).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -316,7 +316,7 @@ func TestSliceInt32(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Slice[int32](softstruct.Int32()).ConvertValue(tt.value)
+		value, err := mp.Slice[int32](mp.Int32()).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -335,7 +335,7 @@ func TestSliceString(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.Slice[string](softstruct.SingleLineString()).ConvertValue(tt.value)
+		value, err := mp.Slice[string](mp.SingleLineString()).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.Equalf(t, tt.success, err == nil, "%d", i)
 	}
@@ -360,7 +360,7 @@ func TestSingleLineString(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.SingleLineString().ConvertValue(tt.value)
+		value, err := mp.SingleLineString().ConvertValue(tt.value)
 		assert.Equalf(t, tt.success, err == nil, "%d: %s", i, tt.msg)
 		assert.Equalf(t, tt.expected, value, "%d: %s", i, tt.msg)
 	}
@@ -384,7 +384,7 @@ func TestNilifyEmpty(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.NilifyEmpty().ConvertValue(tt.value)
+		value, err := mp.NilifyEmpty().ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		assert.NoErrorf(t, err, "%d", i)
 	}
@@ -409,7 +409,7 @@ func TestMinLen(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.MinLen(tt.length).ConvertValue(tt.value)
+		value, err := mp.MinLen(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			require.NoError(t, err, "%d", i)
@@ -439,7 +439,7 @@ func TestMaxLen(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.MaxLen(tt.length).ConvertValue(tt.value)
+		value, err := mp.MaxLen(tt.length).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			require.NoError(t, err, "%d", i)
@@ -468,7 +468,7 @@ func TestAllowStrings(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.AllowStrings(tt.allowedValues...).ConvertValue(tt.value)
+		value, err := mp.AllowStrings(tt.allowedValues...).ConvertValue(tt.value)
 		if tt.errMatcher == nil {
 			assert.Equalf(t, tt.value, value, "%d", i)
 			assert.NoError(t, err, "%d", i)
@@ -497,7 +497,7 @@ func TestExcludeStrings(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.ExcludeStrings(tt.excludedValues...).ConvertValue(tt.value)
+		value, err := mp.ExcludeStrings(tt.excludedValues...).ConvertValue(tt.value)
 		if tt.errMatcher == nil {
 			assert.Equalf(t, tt.value, value, "%d", i)
 			assert.NoError(t, err, "%d", i)
@@ -523,7 +523,7 @@ func TestLessThan(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.LessThan(tt.limit).ConvertValue(tt.value)
+		value, err := mp.LessThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			assert.NoError(t, err, "%d", i)
@@ -550,7 +550,7 @@ func TestLessThanOrEqual(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.LessThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := mp.LessThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			assert.NoError(t, err, "%d", i)
@@ -577,7 +577,7 @@ func TestGreaterThan(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.GreaterThan(tt.limit).ConvertValue(tt.value)
+		value, err := mp.GreaterThan(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			assert.NoError(t, err, "%d", i)
@@ -604,7 +604,7 @@ func TestGreaterThanOrEqual(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		value, err := softstruct.GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
+		value, err := mp.GreaterThanOrEqual(tt.limit).ConvertValue(tt.value)
 		assert.Equalf(t, tt.expected, value, "%d", i)
 		if tt.errMatcher == nil {
 			assert.NoError(t, err, "%d", i)
@@ -614,21 +614,10 @@ func TestGreaterThanOrEqual(t *testing.T) {
 	}
 }
 
-func BenchmarkNewTypeAndRecord(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ft := softstruct.Type{}
-		ft.Field("name", softstruct.String())
-		ft.Field("age", softstruct.Int32())
-
-		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})
-		require.NoError(b, record.Errors())
-	}
-}
-
-func BenchmarkRecord(b *testing.B) {
-	ft := softstruct.Type{}
-	ft.Field("name", softstruct.String())
-	ft.Field("age", softstruct.Int32())
+func BenchmarkTypeParse(b *testing.B) {
+	ft := mp.Type{}
+	ft.Field("name", mp.String())
+	ft.Field("age", mp.Int32())
 
 	for i := 0; i < b.N; i++ {
 		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})
