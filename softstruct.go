@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/gofrs/uuid/v5"
@@ -55,8 +56,8 @@ func (t *Type) Field(name string, converters ...ValueConverter) {
 	t.fields[name] = &field{name: name, converters: converters}
 }
 
-// New creates a Record from attrs.
-func (t *Type) New(attrs map[string]any) *Record {
+// Parse creates a Record from attrs.
+func (t *Type) Parse(attrs map[string]any) *Record {
 	r := &Record{
 		t:         t,
 		original:  attrs,
@@ -92,7 +93,7 @@ func (t *Type) ConvertValue(v any) (any, error) {
 	}
 
 	if m, ok := v.(map[string]any); ok {
-		record := t.New(m)
+		record := t.Parse(m)
 		if record.Errors() != nil {
 			return nil, record.Errors()
 		}
@@ -442,6 +443,31 @@ func Bool() ValueConverter {
 		default:
 			return nil, errors.New("not a valid boolean")
 		}
+	})
+}
+
+// Time returns a ValueConverter that converts value to a time.Time using formats. If value is nil or a blank string nil is returned.
+func Time(formats ...string) ValueConverter {
+	return ValueConverterFunc(func(value any) (any, error) {
+		value = normalizeForParsing(value)
+
+		if value == nil {
+			return nil, nil
+		}
+
+		switch value := value.(type) {
+		case time.Time:
+			return value, nil
+		case string:
+			for _, format := range formats {
+				t, err := time.Parse(format, value)
+				if err == nil {
+					return t, nil
+				}
+			}
+		}
+
+		return nil, errors.New("not a valid time")
 	})
 }
 

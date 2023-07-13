@@ -3,6 +3,7 @@ package softstruct_test
 import (
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/jackc/softstruct"
 	"github.com/shopspring/decimal"
@@ -14,7 +15,7 @@ func TestType(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("name")
 
-	record := ft.New(map[string]any{"name": "Adam"})
+	record := ft.Parse(map[string]any{"name": "Adam"})
 	require.NoError(t, record.Errors())
 
 	assert.Equal(t, "Adam", record.Get("name"))
@@ -24,7 +25,7 @@ func TestTypeNewError(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("age", softstruct.Int64())
 
-	record := ft.New(map[string]any{"age": "abc"})
+	record := ft.Parse(map[string]any{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
@@ -32,7 +33,7 @@ func TestTypeNewRequiredError(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("name", softstruct.Require())
 
-	record := ft.New(map[string]any{"misspelled": "adam"})
+	record := ft.Parse(map[string]any{"misspelled": "adam"})
 	require.Error(t, record.Errors())
 }
 
@@ -43,14 +44,14 @@ func TestRecordAttrs(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
+	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3", "d": nil}, record.Attrs())
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft := softstruct.Type{}
 	ft.Field("a")
-	record := ft.New(map[string]any{"b": "2"})
+	record := ft.Parse(map[string]any{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
@@ -61,7 +62,7 @@ func TestRecordPick(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
+	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
 	attrs := record.Pick("a", "b")
 	assert.Equal(t, map[string]any{"a": "1", "b": "2"}, attrs)
@@ -77,7 +78,7 @@ func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft.Field("c")
 	ft.Field("d")
 
-	record := ft.New(map[string]any{"a": "1", "b": "2", "c": "3"})
+	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
 	assert.PanicsWithError(t, `"z" is not a field of type`, func() { record.Pick("a", "b", "z") })
 }
@@ -214,6 +215,34 @@ func TestBool(t *testing.T) {
 	}
 }
 
+func TestTime(t *testing.T) {
+	tests := []struct {
+		value    any
+		expected any
+		success  bool
+	}{
+		{"foo", nil, false},
+		{"2023-06-24", time.Date(2023, 6, 24, 0, 0, 0, 0, time.UTC), true},
+		{"2023-06-24 20:41:50", time.Date(2023, 6, 24, 20, 41, 50, 0, time.UTC), true},
+		{nil, nil, true},
+		{"", nil, true},
+		{"  ", nil, true},
+	}
+
+	for i, tt := range tests {
+		value, err := softstruct.Time("2006-01-02", "2006-01-02 15:04:05").ConvertValue(tt.value)
+		if tt.expected == nil {
+			assert.Nilf(t, value, "%d", i)
+		} else {
+			expectedTime := tt.expected.(time.Time)
+			valueTime, ok := value.(time.Time)
+			assert.Truef(t, ok, "%d", i)
+			assert.Truef(t, expectedTime.Equal(valueTime), "%d", i)
+		}
+		assert.Equalf(t, tt.success, err == nil, "%d", i)
+	}
+}
+
 func TestDecimal(t *testing.T) {
 	tests := []struct {
 		value    any
@@ -249,7 +278,7 @@ func TestSliceRecord(t *testing.T) {
 	}{
 		{
 			value:    []any{map[string]any{"n": 1}, map[string]any{"n": 2}},
-			expected: []*softstruct.Record{softstructType.New(map[string]any{"n": 1}), softstructType.New(map[string]any{"n": 2})},
+			expected: []*softstruct.Record{softstructType.Parse(map[string]any{"n": 1}), softstructType.Parse(map[string]any{"n": 2})},
 			success:  true,
 		},
 		{
@@ -591,7 +620,7 @@ func BenchmarkNewTypeAndRecord(b *testing.B) {
 		ft.Field("name", softstruct.String())
 		ft.Field("age", softstruct.Int32())
 
-		record := ft.New(map[string]any{"name": "Adam", "age": 30})
+		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
 	}
 }
@@ -602,7 +631,7 @@ func BenchmarkRecord(b *testing.B) {
 	ft.Field("age", softstruct.Int32())
 
 	for i := 0; i < b.N; i++ {
-		record := ft.New(map[string]any{"name": "Adam", "age": 30})
+		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})
 		require.NoError(b, record.Errors())
 	}
 }
