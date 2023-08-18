@@ -25,34 +25,55 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type field struct {
-	name       string
-	converters []ValueConverter
-}
-
 // Type is a type that can be used to convert a map[string]any to a Record.
 //
 // It implements the ValueConverter interface so it can be used to build nested structs.
 type Type struct {
-	fields map[string]*field
+	fieldsByName map[string]*Field
+	fields       []*Field
 }
 
+// Field is a field of a Type.
+type Field struct {
+	// Name is the field name.
+	Name string
+
+	// ValueConverters is the list of ValueConverters that will be applied to the field.
+	ValueConverters []ValueConverter
+}
+
+// TypeBuilder is a convenience interface for building a Type.
 type TypeBuilder interface {
 	Field(name string, converters ...ValueConverter)
 }
 
+// NewType creates a new Type by calling f with a TypeBuilder.
 func NewType(f func(tb TypeBuilder)) *Type {
 	t := &Type{}
-	f(t)
+	f((*typeTypeBuiler)(t))
 	return t
 }
 
-func (t *Type) Field(name string, converters ...ValueConverter) {
-	if t.fields == nil {
-		t.fields = make(map[string]*field)
+type typeTypeBuiler Type
+
+func (ttb *typeTypeBuiler) Field(name string, converters ...ValueConverter) {
+	(*Type)(ttb).AddField(name, converters...)
+}
+
+// Fields returns the fields of the type. The returned slice must not be modified.
+func (t *Type) Fields() []*Field {
+	return t.fields
+}
+
+// AddField adds a field to the type.
+func (t *Type) AddField(name string, converters ...ValueConverter) {
+	if t.fieldsByName == nil {
+		t.fieldsByName = make(map[string]*Field)
 	}
 
-	t.fields[name] = &field{name: name, converters: converters}
+	f := &Field{Name: name, ValueConverters: converters}
+	t.fields = append(t.fields, f)
+	t.fieldsByName[name] = f
 }
 
 // Parse creates a Record from attrs.
@@ -64,11 +85,11 @@ func (t *Type) Parse(attrs map[string]any) *Record {
 		errors:    make(map[string]error, len(attrs)),
 	}
 
-	for _, f := range t.fields {
-		v := attrs[f.name]
+	for _, f := range t.fieldsByName {
+		v := attrs[f.Name]
 
 		var err error
-		for _, converter := range f.converters {
+		for _, converter := range f.ValueConverters {
 			v, err = converter.ConvertValue(v)
 			if err != nil {
 				break
@@ -76,9 +97,9 @@ func (t *Type) Parse(attrs map[string]any) *Record {
 		}
 
 		if err == nil {
-			r.converted[f.name] = v
+			r.converted[f.Name] = v
 		} else {
-			r.errors[f.name] = err
+			r.errors[f.Name] = err
 		}
 	}
 
@@ -103,16 +124,20 @@ func (t *Type) ConvertValue(v any) (any, error) {
 	return nil, errors.New("cannot convert to record")
 }
 
+// ValueConverter is an interface that converts a value to a different type or validates the value.
 type ValueConverter interface {
 	ConvertValue(any) (any, error)
 }
 
+// ValueConverterFunc is a function that implements the ValueConverter interface.
 type ValueConverterFunc func(any) (any, error)
 
+// ConvertValue implements the ValueConverter interface.
 func (vcf ValueConverterFunc) ConvertValue(v any) (any, error) {
 	return vcf(v)
 }
 
+// Errors is a map of field name to error. It implements the error interface.
 type Errors map[string]error
 
 func (e Errors) Error() string {
@@ -130,6 +155,7 @@ func (e Errors) Error() string {
 	return sb.String()
 }
 
+// MarshalJSON implements the json.Marshaler interface.
 func (e Errors) MarshalJSON() ([]byte, error) {
 	if len(e) == 0 {
 		return []byte(`{}`), nil
@@ -175,14 +201,16 @@ type Record struct {
 	errors    Errors
 }
 
+// Get returns the value of the field named s. If s is not a field of the type then Get panics.
 func (r *Record) Get(s string) any {
-	if _, ok := r.t.fields[s]; !ok {
+	if _, ok := r.t.fieldsByName[s]; !ok {
 		panic(fmt.Errorf("%q is not a field of type", s))
 	}
 
 	return r.converted[s]
 }
 
+// Errors returns the errors for the record. If the record is valid then nil is returned.
 func (r *Record) Errors() error {
 	if len(r.errors) == 0 {
 		return nil
@@ -191,10 +219,12 @@ func (r *Record) Errors() error {
 	return r.errors
 }
 
+// Pick returns a map with the keys and values of the fields named in keys. If any of the keys are not fields of the
+// type then Pick panics.
 func (r *Record) Pick(keys ...string) map[string]any {
 	m := make(map[string]any, len(keys))
 	for _, k := range keys {
-		if _, ok := r.t.fields[k]; !ok {
+		if _, ok := r.t.fieldsByName[k]; !ok {
 			panic(fmt.Errorf("%q is not a field of type", k))
 		}
 
@@ -205,6 +235,7 @@ func (r *Record) Pick(keys ...string) map[string]any {
 	return m
 }
 
+// Attrs returns the converted attributes of the record.
 func (r *Record) Attrs() map[string]any {
 	return r.converted
 }

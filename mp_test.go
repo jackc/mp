@@ -13,7 +13,7 @@ import (
 
 func TestType(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("name")
+	ft.AddField("name")
 
 	record := ft.Parse(map[string]any{"name": "Adam"})
 	require.NoError(t, record.Errors())
@@ -23,7 +23,7 @@ func TestType(t *testing.T) {
 
 func TestTypeNewError(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("age", mp.Int64())
+	ft.AddField("age", mp.Int64())
 
 	record := ft.Parse(map[string]any{"age": "abc"})
 	require.Error(t, record.Errors())
@@ -31,7 +31,7 @@ func TestTypeNewError(t *testing.T) {
 
 func TestTypeNewRequiredError(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("name", mp.Require())
+	ft.AddField("name", mp.Require())
 
 	record := ft.Parse(map[string]any{"misspelled": "adam"})
 	require.Error(t, record.Errors())
@@ -39,10 +39,10 @@ func TestTypeNewRequiredError(t *testing.T) {
 
 func TestRecordAttrs(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("a")
-	ft.Field("b")
-	ft.Field("c")
-	ft.Field("d")
+	ft.AddField("a")
+	ft.AddField("b")
+	ft.AddField("c")
+	ft.AddField("d")
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3", "d": nil}, record.Attrs())
@@ -50,17 +50,17 @@ func TestRecordAttrs(t *testing.T) {
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("a")
+	ft.AddField("a")
 	record := ft.Parse(map[string]any{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
 func TestRecordPick(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("a")
-	ft.Field("b")
-	ft.Field("c")
-	ft.Field("d")
+	ft.AddField("a")
+	ft.AddField("b")
+	ft.AddField("c")
+	ft.AddField("d")
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
@@ -73,10 +73,10 @@ func TestRecordPick(t *testing.T) {
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
 	ft := mp.Type{}
-	ft.Field("a")
-	ft.Field("b")
-	ft.Field("c")
-	ft.Field("d")
+	ft.AddField("a")
+	ft.AddField("b")
+	ft.AddField("c")
+	ft.AddField("d")
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
@@ -616,8 +616,8 @@ func TestGreaterThanOrEqual(t *testing.T) {
 
 func BenchmarkTypeParse(b *testing.B) {
 	ft := mp.Type{}
-	ft.Field("name", mp.String())
-	ft.Field("age", mp.Int32())
+	ft.AddField("name", mp.String())
+	ft.AddField("age", mp.Int32())
 
 	for i := 0; i < b.N; i++ {
 		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})
