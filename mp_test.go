@@ -12,8 +12,9 @@ import (
 )
 
 func TestType(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("name")
+	ft := mp.NewType(
+		mp.NewField("name"),
+	)
 
 	record := ft.Parse(map[string]any{"name": "Adam"})
 	require.NoError(t, record.Errors())
@@ -22,45 +23,49 @@ func TestType(t *testing.T) {
 }
 
 func TestTypeNewError(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("age", mp.Int64())
+	ft := mp.NewType(
+		mp.NewField("age", mp.Int64()),
+	)
 
 	record := ft.Parse(map[string]any{"age": "abc"})
 	require.Error(t, record.Errors())
 }
 
 func TestTypeNewRequiredError(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("name", mp.Require())
+	ft := mp.NewType(
+		mp.NewField("name", mp.Require()),
+	)
 
 	record := ft.Parse(map[string]any{"misspelled": "adam"})
 	require.Error(t, record.Errors())
 }
 
 func TestRecordAttrs(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("a")
-	ft.AddField("b")
-	ft.AddField("c")
-	ft.AddField("d")
+	ft := mp.NewType(
+		mp.NewField("a"),
+		mp.NewField("b"),
+		mp.NewField("c"),
+		mp.NewField("d"))
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 	assert.Equal(t, map[string]any{"a": "1", "b": "2", "c": "3", "d": nil}, record.Attrs())
 }
 
 func TestRecordGetPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("a")
+	ft := mp.NewType(
+		mp.NewField("a"),
+	)
 	record := ft.Parse(map[string]any{"b": "2"})
 	assert.PanicsWithError(t, `"b" is not a field of type`, func() { record.Get("b") })
 }
 
 func TestRecordPick(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("a")
-	ft.AddField("b")
-	ft.AddField("c")
-	ft.AddField("d")
+	ft := mp.NewType(
+		mp.NewField("a"),
+		mp.NewField("b"),
+		mp.NewField("c"),
+		mp.NewField("d"),
+	)
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
@@ -72,11 +77,12 @@ func TestRecordPick(t *testing.T) {
 }
 
 func TestRecordPickPanicsWhenFieldNameNotInType(t *testing.T) {
-	ft := mp.Type{}
-	ft.AddField("a")
-	ft.AddField("b")
-	ft.AddField("c")
-	ft.AddField("d")
+	ft := mp.NewType(
+		mp.NewField("a"),
+		mp.NewField("b"),
+		mp.NewField("c"),
+		mp.NewField("d"),
+	)
 
 	record := ft.Parse(map[string]any{"a": "1", "b": "2", "c": "3"})
 
@@ -267,9 +273,9 @@ func TestDecimal(t *testing.T) {
 }
 
 func TestSliceRecord(t *testing.T) {
-	mpType := mp.NewType(func(tb mp.TypeBuilder) {
-		tb.Field("n", mp.Int32(), mp.Require())
-	})
+	mpType := mp.NewType(
+		mp.NewField("n", mp.Int32(), mp.Require()),
+	)
 
 	tests := []struct {
 		value    any
@@ -614,10 +620,34 @@ func TestGreaterThanOrEqual(t *testing.T) {
 	}
 }
 
+// func FieldType(field mp.Field) reflect.Type {
+// 	var resultType reflect.Type
+// 	for _, vc := range field.ValueConverters {
+// 		if rt, ok := vc.(mp.ValueConverterResultTyper); ok {
+// 			resultType = rt.ResultType()
+// 		}
+// 	}
+// 	return resultType
+// }
+
+// func FieldRequired(field mp.Field) bool {
+// 	return true
+// }
+
+// func TestIntrospectFieldType(t *testing.T) {
+// 	field := mp.Field{
+// 		ValueConverters: []mp.ValueConverter{mp.Int64()},
+// 	}
+
+// 	finalType := FieldType(field)
+// 	require.Equal(t, reflect.TypeOf(int64(0)), finalType)
+// }
+
 func BenchmarkTypeParse(b *testing.B) {
-	ft := mp.Type{}
-	ft.AddField("name", mp.String())
-	ft.AddField("age", mp.Int32())
+	ft := mp.NewType(
+		mp.NewField("name", mp.String()),
+		mp.NewField("age", mp.Int32()),
+	)
 
 	for i := 0; i < b.N; i++ {
 		record := ft.Parse(map[string]any{"name": "Adam", "age": 30})

@@ -29,51 +29,60 @@ import (
 //
 // It implements the ValueConverter interface so it can be used to build nested structs.
 type Type struct {
-	fieldsByName map[string]*Field
-	fields       []*Field
+	fieldsByName map[string]Field
+	fields       []Field
 }
 
-// Field is a field of a Type.
-type Field struct {
-	// Name is the field name.
-	Name string
-
-	// ValueConverters is the list of ValueConverters that will be applied to the field.
-	ValueConverters []ValueConverter
+type Field interface {
+	Name() string
+	ValueConverter
 }
 
-// TypeBuilder is a convenience interface for building a Type.
-type TypeBuilder interface {
-	Field(name string, converters ...ValueConverter)
+// NewField creates a new field with the given name and valueConverters.
+func NewField(name string, valueConverters ...ValueConverter) *StandardField {
+	return &StandardField{name: name, valueConverters: valueConverters}
 }
 
-// NewType creates a new Type by calling f with a TypeBuilder.
-func NewType(f func(tb TypeBuilder)) *Type {
-	t := &Type{}
-	f((*typeTypeBuiler)(t))
-	return t
+// StandardField is a field of a Type.
+type StandardField struct {
+	// name is the field name.
+	name string
+
+	// valueConverters is the list of valueConverters that will be applied to the field.
+	valueConverters []ValueConverter
 }
 
-type typeTypeBuiler Type
+// Name returns the name of the field.
+func (f *StandardField) Name() string {
+	return f.name
+}
 
-func (ttb *typeTypeBuiler) Field(name string, converters ...ValueConverter) {
-	(*Type)(ttb).AddField(name, converters...)
+// ConvertValue implements the ValueConverter interface.
+func (f *StandardField) ConvertValue(value any) (any, error) {
+	return convertSlice(value, f.valueConverters)
+}
+
+// ValueConverters returns the valueConverters of the field. The returned slice must not be modified.
+func (f *StandardField) ValueConverters() []ValueConverter {
+	return f.valueConverters
 }
 
 // Fields returns the fields of the type. The returned slice must not be modified.
-func (t *Type) Fields() []*Field {
+func (t *Type) Fields() []Field {
 	return t.fields
 }
 
-// AddField adds a field to the type.
-func (t *Type) AddField(name string, converters ...ValueConverter) {
-	if t.fieldsByName == nil {
-		t.fieldsByName = make(map[string]*Field)
+func NewType(fields ...Field) *Type {
+	t := &Type{
+		fields:       fields,
+		fieldsByName: make(map[string]Field, len(fields)),
 	}
 
-	f := &Field{Name: name, ValueConverters: converters}
-	t.fields = append(t.fields, f)
-	t.fieldsByName[name] = f
+	for _, f := range fields {
+		t.fieldsByName[f.Name()] = f
+	}
+
+	return t
 }
 
 // Parse creates a Record from attrs.
@@ -86,20 +95,11 @@ func (t *Type) Parse(attrs map[string]any) *Record {
 	}
 
 	for _, f := range t.fieldsByName {
-		v := attrs[f.Name]
-
-		var err error
-		for _, converter := range f.ValueConverters {
-			v, err = converter.ConvertValue(v)
-			if err != nil {
-				break
-			}
-		}
-
+		value, err := f.ConvertValue(attrs[f.Name()])
 		if err == nil {
-			r.converted[f.Name] = v
+			r.converted[f.Name()] = value
 		} else {
-			r.errors[f.Name] = err
+			r.errors[f.Name()] = err
 		}
 	}
 
@@ -135,6 +135,10 @@ type ValueConverterFunc func(any) (any, error)
 // ConvertValue implements the ValueConverter interface.
 func (vcf ValueConverterFunc) ConvertValue(v any) (any, error) {
 	return vcf(v)
+}
+
+type ConvertedTyper interface {
+	ConvertedType() reflect.Type
 }
 
 // Errors is a map of field name to error. It implements the error interface.
@@ -240,6 +244,32 @@ func (r *Record) Attrs() map[string]any {
 	return r.converted
 }
 
+// Int64 returns a ValueConverter that converts value to an int64. If value is nil or a blank string nil is returned.
+func Int64() ValueConverter {
+	return int64ValueConverter{}
+}
+
+type int64ValueConverter struct{}
+
+func (c int64ValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
+
+	if value == nil {
+		return nil, nil
+	}
+
+	n, err := convertInt64(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (c int64ValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(int64(0))
+}
+
 func convertInt64(value any) (int64, error) {
 	switch value := value.(type) {
 	case int8:
@@ -306,24 +336,6 @@ func convertInt64(value any) (int64, error) {
 		return 0, errors.New("not a valid number")
 	}
 	return num, nil
-}
-
-// Int64 returns a ValueConverter that converts value to an int64. If value is nil or a blank string nil is returned.
-func Int64() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
-
-		if value == nil {
-			return nil, nil
-		}
-
-		n, err := convertInt64(value)
-		if err != nil {
-			return nil, err
-		}
-
-		return n, nil
-	})
 }
 
 func convertInt32(value any) (int32, error) {
