@@ -620,29 +620,6 @@ func TestGreaterThanOrEqual(t *testing.T) {
 	}
 }
 
-// func FieldType(field mp.Field) reflect.Type {
-// 	var resultType reflect.Type
-// 	for _, vc := range field.ValueConverters {
-// 		if rt, ok := vc.(mp.ValueConverterResultTyper); ok {
-// 			resultType = rt.ResultType()
-// 		}
-// 	}
-// 	return resultType
-// }
-
-// func FieldRequired(field mp.Field) bool {
-// 	return true
-// }
-
-// func TestIntrospectFieldType(t *testing.T) {
-// 	field := mp.Field{
-// 		ValueConverters: []mp.ValueConverter{mp.Int64()},
-// 	}
-
-// 	finalType := FieldType(field)
-// 	require.Equal(t, reflect.TypeOf(int64(0)), finalType)
-// }
-
 func BenchmarkTypeParse(b *testing.B) {
 	ft := mp.NewType(
 		mp.NewField("name", mp.String()),

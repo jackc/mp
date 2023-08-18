@@ -350,20 +350,54 @@ func convertInt32(value any) (int32, error) {
 
 // Int32 returns a ValueConverter that converts value to an int32. If value is nil or a blank string nil is returned.
 func Int32() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
+	return int32ValueConverter{}
+}
 
-		if value == nil {
-			return nil, nil
-		}
+type int32ValueConverter struct{}
 
-		n, err := convertInt32(value)
-		if err != nil {
-			return nil, err
-		}
+func (c int32ValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
 
-		return n, nil
-	})
+	if value == nil {
+		return nil, nil
+	}
+
+	n, err := convertInt32(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (c int32ValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(int32(0))
+}
+
+// Float64 returns a ValueConverter that converts value to an float64. If value is nil or a blank string nil is returned.
+func Float64() ValueConverter {
+	return float64ValueConverter{}
+}
+
+type float64ValueConverter struct{}
+
+func (c float64ValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
+
+	if value == nil {
+		return value, nil
+	}
+
+	n, err := convertFloat64(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (c float64ValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(float64(0))
 }
 
 func convertFloat64(value any) (float64, error) {
@@ -404,22 +438,31 @@ func convertFloat64(value any) (float64, error) {
 	return num, nil
 }
 
-// Float64 returns a ValueConverter that converts value to an float64. If value is nil or a blank string nil is returned.
-func Float64() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
+// Float32 returns a ValueConverter that converts value to an float32. If value is nil or a blank string nil is
+// returned.
+func Float32() ValueConverter {
+	return float32ValueConverter{}
+}
 
-		if value == nil {
-			return value, nil
-		}
+type float32ValueConverter struct{}
 
-		n, err := convertFloat64(value)
-		if err != nil {
-			return nil, err
-		}
+func (c float32ValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
 
-		return n, nil
-	})
+	if value == nil {
+		return value, nil
+	}
+
+	n, err := convertFloat32(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (c float32ValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(float32(0))
 }
 
 func convertFloat32(value any) (float32, error) {
@@ -438,96 +481,130 @@ func convertFloat32(value any) (float32, error) {
 	return float32(n), nil
 }
 
-// Float32 returns a ValueConverter that converts value to an float32. If value is nil or a blank string nil is
-// returned.
-func Float32() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
+// Bool returns a ValueConverter that converts value to a bool. If value is nil or a blank string nil is returned.
+func Bool() ValueConverter {
+	return boolValueConverter{}
+}
 
-		if value == nil {
-			return value, nil
-		}
+type boolValueConverter struct{}
 
-		n, err := convertFloat32(value)
+func (c boolValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
+
+	if value == nil {
+		return nil, nil
+	}
+
+	switch value := value.(type) {
+	case bool:
+		return value, nil
+	case string:
+		value = strings.TrimSpace(value)
+		b, err := strconv.ParseBool(value)
 		if err != nil {
 			return nil, err
 		}
-
-		return n, nil
-	})
+		return b, nil
+	default:
+		return nil, errors.New("not a valid boolean")
+	}
 }
 
-// Bool returns a ValueConverter that converts value to a bool. If value is nil or a blank string nil is returned.
-func Bool() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
-
-		if value == nil {
-			return nil, nil
-		}
-
-		switch value := value.(type) {
-		case bool:
-			return value, nil
-		case string:
-			value = strings.TrimSpace(value)
-			b, err := strconv.ParseBool(value)
-			if err != nil {
-				return nil, err
-			}
-			return b, nil
-		default:
-			return nil, errors.New("not a valid boolean")
-		}
-	})
+func (c boolValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(false)
 }
 
 // Time returns a ValueConverter that converts value to a time.Time using formats. If value is nil or a blank string nil is returned.
 func Time(formats ...string) ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
+	return &timeValueConverter{formats: formats}
+}
 
-		if value == nil {
-			return nil, nil
-		}
+type timeValueConverter struct {
+	formats []string
+}
 
-		switch value := value.(type) {
-		case time.Time:
-			return value, nil
-		case string:
-			for _, format := range formats {
-				t, err := time.Parse(format, value)
-				if err == nil {
-					return t, nil
-				}
+func (c *timeValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
+
+	if value == nil {
+		return nil, nil
+	}
+
+	switch value := value.(type) {
+	case time.Time:
+		return value, nil
+	case string:
+		for _, format := range c.formats {
+			t, err := time.Parse(format, value)
+			if err == nil {
+				return t, nil
 			}
 		}
+	}
 
-		return nil, errors.New("not a valid time")
-	})
+	return nil, errors.New("not a valid time")
+}
+
+func (c *timeValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(time.Time{})
 }
 
 // UUID returns a ValueConverter that converts value to a uuid.UUID. If value is nil or a blank string nil is returned.
 func UUID() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
+	return uuidValueConverter{}
+}
 
-		if value == nil {
-			return nil, nil
-		}
+type uuidValueConverter struct{}
 
-		var uuidValue uuid.UUID
-		var err error
+func (c uuidValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
 
-		if value, ok := value.([]byte); ok {
-			uuidValue, err = uuid.FromBytes(value)
-			return uuidValue, err
-		}
+	if value == nil {
+		return nil, nil
+	}
 
-		s := fmt.Sprintf("%v", value)
-		uuidValue, err = uuid.FromString(s)
+	var uuidValue uuid.UUID
+	var err error
+
+	if value, ok := value.([]byte); ok {
+		uuidValue, err = uuid.FromBytes(value)
 		return uuidValue, err
-	})
+	}
+
+	s := fmt.Sprintf("%v", value)
+	uuidValue, err = uuid.FromString(s)
+	return uuidValue, err
+}
+
+func (c uuidValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(uuid.UUID{})
+}
+
+// Decimal returns a ValueConverter that converts value to a decimal.Decimal. If value is nil or a blank string nil is
+// returned.
+func Decimal() ValueConverter {
+	return decimalValueConverter{}
+}
+
+type decimalValueConverter struct{}
+
+func (c decimalValueConverter) ConvertValue(value any) (any, error) {
+	value = normalizeForParsing(value)
+
+	if value == nil {
+		return nil, nil
+	}
+
+	n, err := convertDecimal(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (c decimalValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf(decimal.Decimal{})
 }
 
 func convertDecimal(value any) (decimal.Decimal, error) {
@@ -554,25 +631,6 @@ func convertDecimal(value any) (decimal.Decimal, error) {
 	}
 }
 
-// Decimal returns a ValueConverter that converts value to a decimal.Decimal. If value is nil or a blank string nil is
-// returned.
-func Decimal() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		value = normalizeForParsing(value)
-
-		if value == nil {
-			return nil, nil
-		}
-
-		n, err := convertDecimal(value)
-		if err != nil {
-			return nil, err
-		}
-
-		return n, nil
-	})
-}
-
 func convertString(value any) string {
 	switch value := value.(type) {
 	case string:
@@ -587,13 +645,21 @@ func convertString(value any) string {
 // String returns a ValueConverter that converts value to a string. If value is nil then nil is returned. It does not
 // perform any normalization. In almost all cases, SingleLineString or MultiLineString should be used instead.
 func String() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return value, nil
-		}
+	return stringValueConverter{}
+}
 
-		return convertString(value), nil
-	})
+type stringValueConverter struct{}
+
+func (c stringValueConverter) ConvertValue(value any) (any, error) {
+	if value == nil {
+		return value, nil
+	}
+
+	return convertString(value), nil
+}
+
+func (c stringValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf("")
 }
 
 // Slice returns a ValueConverter that converts value to a []T. value must be a []T or []any. If value is nil then nil
@@ -698,27 +764,35 @@ func IfNotNil(converters ...ValueConverter) ValueConverter {
 //   - Replace non-printable characters with standard space
 //   - Remove spaces from left and right
 func SingleLineString() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return nil, nil
-		}
+	return singleLineStringValueConverter{}
+}
 
-		if s, ok := value.(string); ok {
-			s = strings.ToValidUTF8(s, "")
-			s = strings.Map(func(r rune) rune {
-				if unicode.IsPrint(r) {
-					return r
-				} else {
-					return ' '
-				}
-			}, s)
-			s = strings.TrimSpace(s)
+type singleLineStringValueConverter struct{}
 
-			return s, nil
-		}
+func (c singleLineStringValueConverter) ConvertValue(value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
 
-		return nil, errors.New("not a string")
-	})
+	if s, ok := value.(string); ok {
+		s = strings.ToValidUTF8(s, "")
+		s = strings.Map(func(r rune) rune {
+			if unicode.IsPrint(r) {
+				return r
+			} else {
+				return ' '
+			}
+		}, s)
+		s = strings.TrimSpace(s)
+
+		return s, nil
+	}
+
+	return nil, errors.New("not a string")
+}
+
+func (c singleLineStringValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf("")
 }
 
 // MultiLineString returns a ValueConverter that converts a string value to a normalized string. If value is nil then nil is
@@ -728,26 +802,34 @@ func SingleLineString() ValueConverter {
 //   - Remove any invalid UTF-8
 //   - Replace characters that are not graphic or space with standard space
 func MultiLineString() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return nil, nil
-		}
+	return multiLineStringValueConverter{}
+}
 
-		if s, ok := value.(string); ok {
-			s = strings.ToValidUTF8(s, "")
-			s = strings.Map(func(r rune) rune {
-				if unicode.IsGraphic(r) || unicode.IsSpace(r) {
-					return r
-				} else {
-					return ' '
-				}
-			}, s)
+type multiLineStringValueConverter struct{}
 
-			return s, nil
-		}
+func (c multiLineStringValueConverter) ConvertValue(value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
 
-		return nil, errors.New("not a string")
-	})
+	if s, ok := value.(string); ok {
+		s = strings.ToValidUTF8(s, "")
+		s = strings.Map(func(r rune) rune {
+			if unicode.IsGraphic(r) || unicode.IsSpace(r) {
+				return r
+			} else {
+				return ' '
+			}
+		}, s)
+
+		return s, nil
+	}
+
+	return nil, errors.New("not a string")
+}
+
+func (c multiLineStringValueConverter) ConvertedType() reflect.Type {
+	return reflect.TypeOf("")
 }
 
 // normalizeForParsing prepares value for parsing. If the value is not a string it is returned. Otherwise, space is
