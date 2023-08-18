@@ -639,25 +639,37 @@ func Slice[T any](elementConverter ValueConverter) ValueConverter {
 	})
 }
 
+type notNilValueConverter struct{}
+
+func (c notNilValueConverter) ConvertValue(value any) (any, error) {
+	if value == nil {
+		return nil, errors.New("cannot be nil")
+	}
+	return value, nil
+}
+
+func (c notNilValueConverter) IsNotNil() {}
+
 // NotNil returns a ValueConverter that fails if value is nil.
 func NotNil() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil {
-			return nil, errors.New("cannot be nil")
-		}
-		return value, nil
-	})
+	return notNilValueConverter{}
 }
+
+type requireValueConverter struct{}
+
+func (c requireValueConverter) ConvertValue(value any) (any, error) {
+	if value == nil || value == "" {
+		return nil, fmt.Errorf("cannot be nil or empty")
+	}
+
+	return value, nil
+}
+
+func (c requireValueConverter) IsNotNil() {}
 
 // Require returns a ValueConverter that returns an error if value is nil or "".
 func Require() ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		if value == nil || value == "" {
-			return nil, fmt.Errorf("cannot be nil or empty")
-		}
-
-		return value, nil
-	})
+	return requireValueConverter{}
 }
 
 func convertSlice(value any, converters []ValueConverter) (any, error) {
