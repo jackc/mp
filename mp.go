@@ -292,12 +292,6 @@ func convertInt64(value any) (int64, error) {
 		}
 		return int64(value), nil
 	case int:
-		if int64(value) < math.MinInt64 {
-			return 0, errors.New("less than minimum allowed number")
-		}
-		if int64(value) > math.MaxInt64 {
-			return 0, errors.New("greater than maximum allowed number")
-		}
 		return int64(value), nil
 	case uint:
 		if uint64(value) > math.MaxInt64 {
@@ -778,21 +772,6 @@ func NilifyEmpty() ValueConverter {
 			return nil, nil
 		}
 		return value, nil
-	})
-}
-
-func requireStringTest(test func(string) bool, failErr error) ValueConverter {
-	return ValueConverterFunc(func(value any) (any, error) {
-		s, ok := value.(string)
-		if !ok {
-			return nil, errors.New("not a string")
-		}
-
-		if test(s) {
-			return s, nil
-		}
-
-		return nil, failErr
 	})
 }
 
